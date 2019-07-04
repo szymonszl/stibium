@@ -3,8 +3,20 @@ import json
 
 import fbchat
 from fbchat import models
+import attr
 
 from ._logs import log
+
+@attr.s
+class Message():
+    mid = attr.ib()
+    text = attr.ib()
+    args = attr.ib()
+    uid = attr.ib()
+    thread_id = attr.ib()
+    thread_type = attr.ib()
+
+
 
 class Bot:
     name = None
@@ -32,9 +44,31 @@ class Bot:
         )
         cookies = self.fbchat_client.getSession()
         json.dump(cookies, open(self.fb_login[2], 'w'))
+        log.debug('Created and logged in the fbchat client, now hooking callbacks...')
+        hookedfunction = 'onMessage' # for TODO: extend to other callbacks
+        def hook(self_, **kwargs):
+            self._fbchat_callback_handler(hookedfunction, kwargs)
+            log.debug(f'{hookedfunction} called')
+        setattr(
+            self.fbchat_client,
+            hookedfunction,
+            types.MethodType(hook, self.fbchat_client)
+        )
         log.info('Logged in!')
 
     def listen(self):
         log.info('Starting listening...')
         self.fbchat_client.listen()
 
+    def _fbchat_callback_handler(self, event, kwargs): # kwargs are passed straight as a dict, no **
+        log.warning('Got an event!')
+        if event == 'onMessage':
+            message = Message(
+                text=kwargs["message_object"].text,
+                args="__TODO__",
+                uid=kwargs["author_id"],
+                mid=kwargs["mid"],
+                thread_type=kwargs["thread_type"],
+                thread_id=kwargs["thread_type"]
+            )
+            print(message)
