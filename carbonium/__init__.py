@@ -3,3 +3,6 @@
 
 __version__ = '0.0.0' # Semantic Versioning, see <semver.org>
 __author__ = 'szymonszl'
+
+from .bot import Bot
+from ._logs import log
