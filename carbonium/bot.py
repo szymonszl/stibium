@@ -3,27 +3,22 @@ import json
 
 import fbchat
 from fbchat import models
-import attr
 
 from ._logs import log
-
-@attr.s
-class Message():
-    mid = attr.ib()
-    text = attr.ib()
-    args = attr.ib()
-    uid = attr.ib()
-    thread_id = attr.ib()
-    thread_type = attr.ib()
-
+from .dataclasses import *
+from .handlers import *
 
 
 class Bot:
+    """Main Carbonium Bot class"""
     name = None
     owner = None
     fb_login = ()
     fbchat_client = None
     command_prefix = None
+    _logged_in = False
+    _handlers = {}
+    _hooked_functions = []
     def __init__(self, name, prefix, fb_login, owner):
         log.debug('__init__ called')
         self.name = name
@@ -33,6 +28,7 @@ class Bot:
         log.info('Object created')
 
     def login(self):
+        """Log in to the bot account"""
         log.debug('login called')
         try:
             with open(self.fb_login[2], 'r') as fd:
@@ -40,35 +36,61 @@ class Bot:
         except OSError:
             cookies = {}
         self.fbchat_client = fbchat.Client(
-            self.fb_login[0], self.fb_login[1], session_cookies=cookies
+            self.fb_login[0], self.fb_login[1], session_cookies=cookies, logging_level=30
         )
-        cookies = self.fbchat_client.getSession()
-        json.dump(cookies, open(self.fb_login[2], 'w'))
+        with open(self.fb_login[2], 'w') as fd:
+            cookies = self.fbchat_client.getSession()
+            json.dump(cookies, fd)
         log.debug('Created and logged in the fbchat client, now hooking callbacks...')
-        hookedfunction = 'onMessage' # for TODO: extend to other callbacks
+        for event in self._handlers.keys():
+            self._hook_function(event)
+        self._logged_in = True
+        log.info('Logged in!')
+
+
+    def _hook_function(self, hookedfunction):
+        log.debug('Hooking function %s', hookedfunction)
+        if hookedfunction in self._hooked_functions:
+            return
         def hook(self_, **kwargs):
             self._fbchat_callback_handler(hookedfunction, kwargs)
-            log.debug(f'{hookedfunction} called')
+            log.debug('Function %s called', hookedfunction)
         setattr(
             self.fbchat_client,
             hookedfunction,
             types.MethodType(hook, self.fbchat_client)
         )
-        log.info('Logged in!')
+
 
     def listen(self):
+        """Start listening for events"""
+        if not self._logged_in:
+            raise Exception('The bot is not logged in yet')
         log.info('Starting listening...')
         self.fbchat_client.listen()
 
+    def register(self, handler: BaseHandler):
+        """Register a handler"""
+        log.debug('Registering a handler for function %s', repr(handler))
+        if handler.event is None:
+            raise Exception('Handler did not define event type')
+        if handler.event not in self._handlers.keys():
+            self._handlers[handler.event] = []
+            if self._logged_in:
+                self._hook_function(handler.event)
+        handler.setup(self)
+        self._handlers[handler.event].append(handler)
+        if handler.timeout is not None:
+            pass # TODO: implement timeouts
+
     def _fbchat_callback_handler(self, event, kwargs): # kwargs are passed straight as a dict, no **
-        log.warning('Got an event!')
-        if event == 'onMessage':
+        if event == 'onMessage': # TODO: modularize that
             message = Message(
-                text=kwargs["message_object"].text,
-                args="__TODO__",
-                uid=kwargs["author_id"],
-                mid=kwargs["mid"],
-                thread_type=kwargs["thread_type"],
-                thread_id=kwargs["thread_type"]
+                text=kwargs['message_object'].text,
+                uid=kwargs['author_id'],
+                mid=kwargs['mid'],
+                thread_type=kwargs['thread_type'],
+                thread_id=kwargs['thread_id']
             )
-            print(message)
+            for handler in self._handlers['onMessage']:
+                handler.check(message, self)
