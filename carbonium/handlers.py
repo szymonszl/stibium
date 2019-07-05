@@ -1,6 +1,5 @@
 import re
 from .dataclasses import *
-from fbchat.models import Message as FBMessage # FIXME
 
 class BaseHandler:
     handlerfn = None
@@ -42,7 +41,5 @@ class CommandHandler(BaseHandler):
         event_data.args = args
         # execute the handler fn
         if self.wait:
-            #bot_object.reply(event_data, 'Please wait...') #TODO: add .reply
-            bot_object.fbchat_client.send(FBMessage(text='Please wait...'),
-                hread_id=event_data.thread_id, thread_type=event_data.thread_type)
+            bot_object.reply(event_data, 'Please wait...')
         self.handlerfn(event_data, bot_object)

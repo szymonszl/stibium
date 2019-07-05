@@ -19,6 +19,7 @@ class Bot:
     _logged_in = False
     _handlers = {}
     _hooked_functions = []
+    _username_cache = {}
     def __init__(self, name, prefix, fb_login, owner):
         log.debug('__init__ called')
         self.name = name
@@ -83,6 +84,28 @@ class Bot:
         if handler.timeout is not None:
             pass # TODO: implement timeouts
 
+    def send(self, text, thread_id, thread_type, **kwargs):
+        """Send a message to a specified thread"""
+        # TODO: more settings (in kwargs), like mentions, attachments or replies
+        self.fbchat_client.send(
+            models.Message(text=text),
+            thread_id=thread_id,
+            thread_type=thread_type
+            )
+
+    def reply(self, reply_to: Message, text, **kwargs):
+        """Send a message to a conversation that the message was received from"""
+        self.send(text, reply_to.thread_id, reply_to.thread_type, **kwargs)
+
+    def get_user_name(self, uid):
+        """Get the name of the user specified by uid"""
+        uid = str(uid)
+        name = self._username_cache.get(uid)
+        if name is None:
+            name = self.fbchat_client.fetchUserInfo(uid)[uid].name
+            self._username_cache[uid] = name
+        return name
+
     def _fbchat_callback_handler(self, event, kwargs): # kwargs are passed straight as a dict, no **
         if event == 'onMessage': # TODO: modularize that
             message = Message(
@@ -93,4 +116,4 @@ class Bot:
                 thread_id=kwargs['thread_id']
             )
             for handler in self._handlers['onMessage']:
-                handler.check(message, self)
+                handler.check(message, self) # TODO: split check and execute, add error handling
