@@ -58,7 +58,7 @@ class CommandHandler(BaseHandler):
 
     def execute(self, event_data: Message, bot_object):
         match = self.regex.match(event_data.text)
-        args = match.group("args")
+        args = match.group("args") or ''
         event_data.args = args
         if self.wait:
             bot_object.reply(event_data, 'Please wait...')
