@@ -6,13 +6,16 @@ from fbchat.models import ThreadType, MessageReaction
 @attr.s
 class Thread:
     """Class for containing thread's type and id"""
-    id_= attr.ib()
-    type_ = attr.ib()
-    @staticmethod
-    def fromkwargs(kwargs): # kwargs are passed as dict
+    id_ = attr.ib()
+    type_ = attr.ib(default=ThreadType.USER)
+    @classmethod
+    def fromkwargs(cls, kwargs): # kwargs are passed as dict
         """Create a Thread class from a handler's kwargs"""
-        return Thread(
-            id_=str(kwargs.get('thread_id')),
+        id_ = kwargs.get('thread_id')
+        if id_ is None:
+            return
+        return cls(
+            id_=str(id_),
             type_=kwargs.get('thread_type', ThreadType.USER),
         )
 

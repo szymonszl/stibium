@@ -2,6 +2,7 @@
 
 import types
 import time
+import traceback
 import json
 
 import fbchat
@@ -28,7 +29,7 @@ class Bot:
         self.name = name
         self.prefix = prefix
         self.fb_login = fb_login
-        self.owner = owner
+        self.owner = str(owner).strip()
         log.info('Object created')
 
     def login(self):
@@ -90,6 +91,9 @@ class Bot:
     def send(self, text, thread, **kwargs):
         """Send a message to a specified thread"""
         # TODO: more settings (in kwargs), like mentions, attachments or replies
+        if thread is None:
+            raise Exception('Could not send message: `thread` is None')
+        log.info('Sending a message to thread %s', repr(thread))
         return self.fbchat_client.send(
             models.Message(text=text),
             thread_id=thread.id_,
@@ -128,8 +132,23 @@ class Bot:
             )
         else:
             processed = kwargs
+        print('starting checking')
         for handler in self._handlers.get(event, []):
-            if handler.check(processed, self): # TODO: add error handling
+            print(f'checking handler {handler}')
+            valid = self._run_untrusted(
+                handler.check,
+                args=[processed, self],
+                default='error',
+                thread=thread,
+                notify=False
+            )
+            if valid == 'error':
+                self._handlers.get(event, []).remove(handler)
+                self.send(
+                    f'The handler {handler} was disabled, because of causing an exception.',
+                    thread=Thread(id_=self.owner)
+                )
+            elif valid:
                 log.info('Executing %s, reacting to %s', repr(handler), event)
                 self.fbchat_client.markAsRead(thread.id_)
                 self.fbchat_client.setTypingStatus(
@@ -137,10 +156,52 @@ class Bot:
                     thread_type=thread.type_,
                     thread_id=thread.id_,
                 )
-                time.sleep(0.3) # for safety
-                handler.execute(processed, self)
+                time.sleep(0.3) # for safety from bot detection
+                self._run_untrusted(
+                    handler.execute,
+                    args=[processed, self],
+                    thread=thread,
+                    catch_keyboard=False
+                )
                 self.fbchat_client.setTypingStatus(
                     models.TypingStatus.STOPPED,
                     thread_type=thread.type_,
                     thread_id=thread.id_,
                 )
+
+    def _run_untrusted( # pylint: disable=dangerous-default-value
+            self,
+            fun,
+            args=[],
+            kwargs={},
+            thread=None,
+            notify=True,
+            default=None,
+            catch_keyboard=False
+        ):
+        try:
+            return fun(*args, **kwargs)
+        except Exception:
+            trace = traceback.format_exc()
+            if thread is not None and notify:
+                short_error_message = '\n'.join([
+                    'An unexpected error occured, and the action could not be completed.',
+                    'The administrator has been notified.',
+                    'Error:',
+                    trace.splitlines()[-1],
+                ])
+                self.send(short_error_message, thread) # notify the end user
+            error_message = '\n'.join([
+                f'Error while running function {repr(fun)}',
+                f'with *args={args}',
+                f'**kwargs={kwargs}',
+                f'in thread {thread}',
+                f'Full traceback:',
+                trace,
+            ])
+            self.send(error_message, Thread(id_=self.owner))
+            return default
+        except KeyboardInterrupt as ex:
+            if catch_keyboard:
+                return default
+            raise ex
