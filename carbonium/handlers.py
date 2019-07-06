@@ -1,7 +1,7 @@
 """This module provides the classes for creating event handlers"""
 
 import re
-from .dataclasses import Message
+from .dataclasses import Message, Reaction
 
 class BaseHandler:
     """Base class for creating event handlers"""
@@ -58,8 +58,31 @@ class CommandHandler(BaseHandler):
 
     def execute(self, event_data: Message, bot_object):
         match = self.regex.match(event_data.text)
-        args = match.group("args") or ''
+        args = match.group('args') or ''
         event_data.args = args
         if self.wait:
             event_data.reply('Please wait...')
         self.handlerfn(event_data, bot_object)
+
+class ReactionHandler(BaseHandler):
+    """
+    Event handler for reactions
+
+    Handlers created from this class react to reactions
+    added to a specific message (which can be provided
+    as a Message object or directly as a message id)
+    """
+    event = 'onReactionAdded'
+    mid = None
+    def __init__(self, fn, mid, timeout=None):
+        super().__init__()
+        self.handlerfn = fn
+        if isinstance(mid, Message):
+            self.mid = mid.mid
+        else:
+            self.mid = str(mid)
+        self.timeout = timeout
+    def check(self, event_data: Reaction, bot_object):
+        if event_data.mid == self.mid:
+            return True
+        return False

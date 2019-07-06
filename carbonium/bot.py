@@ -8,7 +8,7 @@ import fbchat
 from fbchat import models
 
 from ._logs import log
-from .dataclasses import Thread, Message
+from .dataclasses import Thread, Message, Reaction
 from .handlers import BaseHandler
 
 
@@ -90,7 +90,7 @@ class Bot:
     def send(self, text, thread, **kwargs):
         """Send a message to a specified thread"""
         # TODO: more settings (in kwargs), like mentions, attachments or replies
-        self.fbchat_client.send(
+        return self.fbchat_client.send(
             models.Message(text=text),
             thread_id=thread.id_,
             thread_type=thread.type_
@@ -113,6 +113,15 @@ class Bot:
                 text=kwargs['message_object'].text,
                 uid=kwargs['author_id'],
                 mid=kwargs['mid'],
+                thread=thread,
+                raw=kwargs,
+                bot=self,
+            )
+        elif event == 'onReactionAdded':
+            processed = Reaction(
+                mid=kwargs['mid'],
+                reaction=kwargs['reaction'],
+                uid=kwargs['author_id'],
                 thread=thread,
                 raw=kwargs,
                 bot=self,
