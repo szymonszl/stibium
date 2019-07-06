@@ -4,6 +4,8 @@ import types
 import time
 import traceback
 import json
+import threading
+import sched
 
 import fbchat
 from fbchat import models
@@ -24,6 +26,8 @@ class Bot:
     _handlers = {}
     _hooked_functions = []
     _username_cache = {}
+    _scheduler = sched.scheduler(time.time, time.sleep)
+
     def __init__(self, name, prefix, fb_login, owner):
         log.debug('__init__ called')
         self.name = name
@@ -66,11 +70,24 @@ class Bot:
             types.MethodType(hook, self.fbchat_client)
         )
 
+    def _timeout_daemon(self):
+        log.info('Started timeout daemon')
+        while True:
+            # the thread is a daemon, so this while does not need to be exited
+            self._scheduler.run()
+            time.sleep(1) # wait for more events
 
     def listen(self):
         """Start listening for events"""
         if not self._logged_in:
             raise Exception('The bot is not logged in yet')
+        log.info('Starting the timeout daemon...')
+        timeout_daemon = threading.Thread(
+            target=self._timeout_daemon,
+            name='TimeoutThread',
+            daemon=True
+        )
+        timeout_daemon.start()
         log.info('Starting listening...')
         self.fbchat_client.listen()
 
@@ -86,7 +103,12 @@ class Bot:
         handler.setup(self)
         self._handlers[handler.event].append(handler)
         if handler.timeout is not None:
-            pass # TODO: implement timeouts
+            self._scheduler.enter(
+                handler.timeout,
+                0,
+                self._handlers[handler.event].remove,
+                argument=(handler,)
+            )
 
     def send(self, text, thread, **kwargs):
         """Send a message to a specified thread"""
