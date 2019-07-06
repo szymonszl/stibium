@@ -8,7 +8,7 @@ import fbchat
 from fbchat import models
 
 from ._logs import log
-from .dataclasses import Message
+from .dataclasses import Thread, Message
 from .handlers import BaseHandler
 
 
@@ -87,18 +87,18 @@ class Bot:
         if handler.timeout is not None:
             pass # TODO: implement timeouts
 
-    def send(self, text, thread_id, thread_type, **kwargs):
+    def send(self, text, thread, **kwargs):
         """Send a message to a specified thread"""
         # TODO: more settings (in kwargs), like mentions, attachments or replies
         self.fbchat_client.send(
             models.Message(text=text),
-            thread_id=thread_id,
-            thread_type=thread_type
-            )
+            thread_id=thread.id_,
+            thread_type=thread.type_
+        )
 
     def reply(self, reply_to: Message, text, **kwargs):
         """Send a message to a conversation that the message was received from"""
-        self.send(text, reply_to.thread_id, reply_to.thread_type, **kwargs)
+        self.send(text, reply_to.thread, **kwargs)
 
     def get_user_name(self, uid):
         """Get the name of the user specified by uid"""
@@ -110,31 +110,31 @@ class Bot:
         return name
 
     def _fbchat_callback_handler(self, event, kwargs): # kwargs are passed straight as a dict, no **
+        thread = Thread.fromkwargs(kwargs)
         if event == 'onMessage': # TODO: modularize preprocessing
-            self.fbchat_client.markAsDelivered(kwargs['thread_id'], kwargs['mid'])
+            self.fbchat_client.markAsDelivered(thread.id_, kwargs['mid'])
             processed = Message(
                 text=kwargs['message_object'].text,
                 uid=kwargs['author_id'],
                 mid=kwargs['mid'],
-                thread_type=kwargs['thread_type'],
-                thread_id=kwargs['thread_id'],
+                thread=thread,
                 raw=kwargs
             )
         else:
             processed = kwargs
         for handler in self._handlers.get(event, []):
             if handler.check(processed, self): # TODO: add error handling
-                log.info('Executing %d, reacting to %d', repr(handler), event)
-                self.fbchat_client.markAsRead(kwargs['thread_id'])
+                log.info('Executing %s, reacting to %s', repr(handler), event)
+                self.fbchat_client.markAsRead(thread.id_)
                 self.fbchat_client.setTypingStatus(
                     models.TypingStatus.TYPING,
-                    thread_type=kwargs['thread_type'],
-                    thread_id=kwargs['thread_id'],
+                    thread_type=thread.type_,
+                    thread_id=thread.id_,
                 )
                 time.sleep(0.3) # for safety
                 handler.execute(processed, self)
                 self.fbchat_client.setTypingStatus(
                     models.TypingStatus.STOPPED,
-                    thread_type=kwargs['thread_type'],
-                    thread_id=kwargs['thread_id'],
+                    thread_type=thread.type_,
+                    thread_id=thread.id_,
                 )
