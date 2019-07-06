@@ -96,10 +96,6 @@ class Bot:
             thread_type=thread.type_
         )
 
-    def reply(self, reply_to: Message, text, **kwargs):
-        """Send a message to a conversation that the message was received from"""
-        self.send(text, reply_to.thread, **kwargs)
-
     def get_user_name(self, uid):
         """Get the name of the user specified by uid"""
         uid = str(uid)
@@ -118,7 +114,8 @@ class Bot:
                 uid=kwargs['author_id'],
                 mid=kwargs['mid'],
                 thread=thread,
-                raw=kwargs
+                raw=kwargs,
+                bot=self,
             )
         else:
             processed = kwargs

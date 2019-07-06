@@ -24,3 +24,7 @@ class Message:
     uid = attr.ib()
     thread = attr.ib()
     raw = attr.ib()
+    bot = attr.ib()
+    def reply(self, text, **kwargs):
+        """Send a message to a conversation that the message was received from"""
+        self.bot.send(text, self.thread, **kwargs)

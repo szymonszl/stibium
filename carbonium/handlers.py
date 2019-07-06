@@ -61,5 +61,5 @@ class CommandHandler(BaseHandler):
         args = match.group("args") or ''
         event_data.args = args
         if self.wait:
-            bot_object.reply(event_data, 'Please wait...')
+            event_data.reply('Please wait...')
         self.handlerfn(event_data, bot_object)

@@ -1,5 +1,5 @@
 import setuptools
-from .carbonium import __version__, __author__
+from carbonium import __version__, __author__
 
 with open("README.rst", "r") as fh:
     long_description = fh.read()
