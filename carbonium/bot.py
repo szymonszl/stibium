@@ -15,7 +15,7 @@ from .dataclasses import Thread, Message, Reaction
 from .handlers import BaseHandler
 
 
-class Bot:
+class Bot(object):
     """Main Carbonium Bot class"""
     name = None
     owner = None
@@ -34,7 +34,7 @@ class Bot:
         self.prefix = prefix
         self.fb_login = fb_login
         self.owner = str(owner).strip()
-        log.info('Object created')
+        log.debug('Object created')
 
     def login(self):
         """Log in to the bot account"""
@@ -71,7 +71,7 @@ class Bot:
         )
 
     def _timeout_daemon(self):
-        log.info('Started timeout daemon')
+        log.debug('Started timeout daemon')
         while True:
             # the thread is a daemon, so this while does not need to be exited
             self._scheduler.run()
@@ -81,7 +81,7 @@ class Bot:
         """Start listening for events"""
         if not self._logged_in:
             raise Exception('The bot is not logged in yet')
-        log.info('Starting the timeout daemon...')
+        log.debug('Starting the timeout daemon...')
         timeout_daemon = threading.Thread(
             target=self._timeout_daemon,
             name='TimeoutThread',
@@ -159,9 +159,7 @@ class Bot:
             )
         else:
             processed = kwargs
-        print('starting checking')
         for handler in self._handlers.get(event, []):
-            print(f'checking handler {handler}')
             valid = self._run_untrusted(
                 handler.check,
                 args=[processed, self],
@@ -171,12 +169,14 @@ class Bot:
             )
             if valid == 'error':
                 self._handlers.get(event, []).remove(handler)
+                errormsg = f'The handler {handler} was disabled, because of causing an exception.'
+                log.error(errormsg)
                 self.send(
-                    f'The handler {handler} was disabled, because of causing an exception.',
+                    errormsg,
                     thread=Thread(id_=self.owner)
                 )
             elif valid:
-                log.info('Executing %s, reacting to %s', repr(handler), event)
+                log.debug('Executing %s, reacting to %s', handler, event)
                 self.fbchat_client.markAsRead(thread.id_)
                 self.fbchat_client.setTypingStatus(
                     models.TypingStatus.TYPING,
@@ -188,7 +188,7 @@ class Bot:
                     handler.execute,
                     args=[processed, self],
                     thread=thread,
-                    catch_keyboard=False
+                    catch_keyboard=True
                 )
                 self.fbchat_client.setTypingStatus(
                     models.TypingStatus.STOPPED,
@@ -219,16 +219,19 @@ class Bot:
                 ])
                 self.send(short_error_message, thread) # notify the end user
             error_message = '\n'.join([
-                f'Error while running function {repr(fun)}',
+                f'Error while running function {fun.__name__}',
                 f'with *args={args}',
                 f'**kwargs={kwargs}',
                 f'in thread {thread}',
                 f'Full traceback:',
                 trace,
             ])
+            log.error(error_message)
             self.send(error_message, Thread(id_=self.owner))
             return default
         except KeyboardInterrupt as ex:
             if catch_keyboard:
+                if thread is not None and notify:
+                    self.send('The command has been interrupted by admin', thread)
                 return default
             raise ex

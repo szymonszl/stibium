@@ -4,7 +4,7 @@ import attr
 from fbchat.models import ThreadType, MessageReaction
 
 @attr.s
-class Thread:
+class Thread(object):
     """Class for containing thread's type and id"""
     id_ = attr.ib()
     type_ = attr.ib(default=ThreadType.USER)
@@ -20,7 +20,7 @@ class Thread:
         )
 
 @attr.s
-class Message:
+class Message(object):
     """Class for received messages"""
     mid = attr.ib()
     text = attr.ib()
@@ -39,7 +39,7 @@ class Message:
         return self.bot.get_user_name(self.uid)
 
 @attr.s
-class Reaction:
+class Reaction(object):
     """Class for reactions"""
     mid = attr.ib()
     reaction = attr.ib()

@@ -3,7 +3,7 @@
 import re
 from .dataclasses import Message, Reaction
 
-class BaseHandler:
+class BaseHandler(object):
     """Base class for creating event handlers"""
     handlerfn = None
     event = None
@@ -40,6 +40,10 @@ class CommandHandler(BaseHandler):
         self.command = command
         self.timeout = timeout
         self.wait = wait
+
+    def __repr__(self):
+        return f'<{type(self).__name__} for {repr(self.command)}>'
+
     def setup(self, bot_object):
         self.prefix = bot_object.prefix
         self.regex = re.compile(
