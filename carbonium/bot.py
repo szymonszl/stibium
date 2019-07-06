@@ -110,14 +110,19 @@ class Bot:
                 argument=(handler,)
             )
 
-    def send(self, text, thread, **kwargs):
+    def send(self, text, thread, mentions=None):
         """Send a message to a specified thread"""
-        # TODO: more settings (in kwargs), like mentions, attachments or replies
+        # TODO: more settings (in kwargs), like attachments or replies
         if thread is None:
             raise Exception('Could not send message: `thread` is None')
+        message = None
+        if isinstance(mentions, list):
+            message = models.Message.formatMentions(text, *mentions)
+        if message is None:
+            message = models.Message(text=text)
         log.info('Sending a message to thread %s', repr(thread))
         return self.fbchat_client.send(
-            models.Message(text=text),
+            message,
             thread_id=thread.id_,
             thread_type=thread.type_
         )

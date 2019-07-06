@@ -29,9 +29,14 @@ class Message:
     thread = attr.ib()
     raw = attr.ib()
     bot = attr.ib()
+
     def reply(self, text, **kwargs):
         """Send a message to a conversation that the message was received from"""
         return self.bot.send(text, self.thread, **kwargs)
+
+    def get_author_name(self):
+        """Get message author's name"""
+        return self.bot.get_user_name(self.uid)
 
 @attr.s
 class Reaction:
