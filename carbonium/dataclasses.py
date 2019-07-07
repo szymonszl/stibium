@@ -32,6 +32,8 @@ class Message(object):
 
     def reply(self, text, **kwargs):
         """Send a message to a conversation that the message was received from"""
+        if kwargs.get('reply', False): # if reply=True
+            kwargs['reply'] = self.mid
         return self.bot.send(text, self.thread, **kwargs)
 
     def get_author_name(self):
