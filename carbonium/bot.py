@@ -59,6 +59,8 @@ class Bot(object):
 
     def _hook_function(self, hookedfunction):
         log.debug('Hooking function %s', hookedfunction)
+        if hookedfunction == '_timeout':
+            return
         if hookedfunction in self._hooked_functions:
             return
         def hook(self_, **kwargs): # pylint: disable=unused-argument
@@ -107,9 +109,18 @@ class Bot(object):
                 self._scheduler.enter(
                     handler.timeout,
                     0,
-                    self._handlers[handler.event].remove,
+                    self._handle_timeout,
                     argument=(handler,)
                 )
+
+    def _handle_timeout(self, handler: BaseHandler):
+        self._run_untrusted(
+            handler.on_timeout,
+            args=(self,),
+            thread=None,
+            notify=False
+        )
+        self._handlers[handler.event].remove(handler)
 
     def send(self, text, thread, mentions=None, reply=None):
         """Send a message to a specified thread"""

@@ -20,6 +20,8 @@ class BaseHandler(object):
             self.handlerfn(event_data, bot_object) # pylint: disable=not-callable
     def setup(self, bot_object): # pylint: disable=unused-argument
         pass
+    def on_timeout(self, bot_object): # pylint: disable=unused-argument
+        pass
 
 #### Generic handlers
 
@@ -94,3 +96,21 @@ class ReactionHandler(BaseHandler):
         if event_data.mid == self.mid:
             return True
         return False
+
+class TimeoutHandler(BaseHandler):
+    """
+    Event handler for timeouts
+
+    Handlers created from this class do not react to messages,
+    but are started a set amount of time after they are registered.
+    """
+    event = '_timeout'
+    def __init__(self, fn, timeout):
+        super().__init__()
+        self.handlerfn = fn
+        self.timeout = timeout
+    def execute(self, event_data, bot_object):
+        pass
+    def on_timeout(self, bot_object):
+        if callable(self.handlerfn):
+            self.handlerfn(bot_object)
