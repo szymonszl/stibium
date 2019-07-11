@@ -91,24 +91,25 @@ class Bot(object):
         log.info('Starting listening...')
         self.fbchat_client.listen()
 
-    def register(self, handler: BaseHandler):
-        """Register a handler"""
-        log.debug('Registering a handler for function %s', repr(handler))
-        if handler.event is None:
-            raise Exception('Handler did not define event type')
-        if handler.event not in self._handlers.keys():
-            self._handlers[handler.event] = []
-            if self._logged_in:
-                self._hook_function(handler.event)
-        handler.setup(self)
-        self._handlers[handler.event].append(handler)
-        if handler.timeout is not None:
-            self._scheduler.enter(
-                handler.timeout,
-                0,
-                self._handlers[handler.event].remove,
-                argument=(handler,)
-            )
+    def register(self, *handlers: BaseHandler):
+        """Register handlers"""
+        for handler in handlers:
+            log.debug('Registering a handler for function %s', repr(handler))
+            if handler.event is None:
+                raise Exception('Handler did not define event type')
+            if handler.event not in self._handlers.keys():
+                self._handlers[handler.event] = []
+                if self._logged_in:
+                    self._hook_function(handler.event)
+            handler.setup(self)
+            self._handlers[handler.event].append(handler)
+            if handler.timeout is not None:
+                self._scheduler.enter(
+                    handler.timeout,
+                    0,
+                    self._handlers[handler.event].remove,
+                    argument=(handler,)
+                )
 
     def send(self, text, thread, mentions=None, reply=None):
         """Send a message to a specified thread"""
