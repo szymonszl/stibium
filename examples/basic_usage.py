@@ -40,6 +40,16 @@ def bad_command(message, bot_object):
 
 bot.register(carbonium.handlers.CommandHandler(bad_command, 'oops'))
 
+# Register new handlers during runtime
+def selfdestruct_command(
+        message: carbonium.dataclasses.Message,
+        bot_object
+    ):
+    mid = message.reply('This message will self-destruct in 15 seconds.')
+    bot.register(carbonium.handlers.SelfDestructMessage(mid, 15))
+bot.register(carbonium.handlers.CommandHandler(selfdestruct_command, 'selfdestruct'))
+
+
 # Start the login routine.
 bot.login()
 # Start listening for commands and events.

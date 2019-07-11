@@ -114,3 +114,21 @@ class TimeoutHandler(BaseHandler):
     def on_timeout(self, bot_object):
         if callable(self.handlerfn):
             self.handlerfn(bot_object)
+
+class SelfDestructMessage(TimeoutHandler):
+    """
+    Self-destructing message handler
+
+
+    This handler will automatically remove ("unsend")
+    a message after a set timeout.
+    """
+    def __init__(self, mid, timeout):
+        super().__init__(self._run, timeout)
+        if isinstance(mid, Message):
+            self.mid = mid.mid
+        else:
+            self.mid = str(mid)
+
+    def _run(self, bot_object):
+        bot_object.fbchat_client.unsend(mid=self.mid)
