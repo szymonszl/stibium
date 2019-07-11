@@ -1,0 +1,5 @@
+{
+    "login": "Login to the account the bot will be running on",
+    "password": "Password to the account",
+    "owner": "User ID to your account (as string!)"
+}

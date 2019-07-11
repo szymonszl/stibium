@@ -5,3 +5,4 @@ __version__ = '0.0.1' # Semantic Versioning, see <semver.org>
 __author__ = 'szymonszl'
 
 from .bot import Bot
+from . import dataclasses, handlers, contrib

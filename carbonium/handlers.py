@@ -3,6 +3,8 @@
 import re
 from .dataclasses import Message, Reaction
 
+#### Base handler
+
 class BaseHandler(object):
     """Base class for creating event handlers"""
     handlerfn = None
@@ -19,6 +21,8 @@ class BaseHandler(object):
     def setup(self, bot_object): # pylint: disable=unused-argument
         pass
 
+#### Generic handlers
+
 class CommandHandler(BaseHandler):
     """
     Event handler for command messages
@@ -28,7 +32,7 @@ class CommandHandler(BaseHandler):
     a name and possibly arguments.
     Example commands:
     !echo test (the prefix is "!", command is "echo", args is "test")
-    :help (prefix is ":", command is "help, args is "")
+    %help (prefix is "%", command is "help, args is "")
     """
     event = 'onMessage'
     command = None
