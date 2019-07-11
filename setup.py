@@ -19,8 +19,9 @@ setuptools.setup(
         "License :: OSI Approved :: BSD License",
         "Intended Audience :: Developers",
         "Operating System :: OS Independent",
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 4 - Beta",
         "Topic :: Communications",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
 )
+
