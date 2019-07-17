@@ -52,6 +52,22 @@ msgstr "PID: {pid}"
 msgid "Uptime: {uptime}"
 msgstr "Uptime: {uptime}"
 
+#: contrib/pins.py:86
+msgid "Please provide text or reply to a message to be pinned"
+msgstr "Please provide text or reply to a message to be pinned"
+
+#: contrib/pins.py:90 contrib/pins.py:101
+msgid "Message was pinned!"
+msgstr "Message was pinned!"
+
+#: contrib/pins.py:93
+msgid "Your pin is waiting for confirmation. "
+msgstr "Your pin is waiting for confirmation. "
+
+#: contrib/pins.py:94
+msgid "Ask {n} people to confirm it by reacting with "
+msgstr "Ask {n} people to confirm it by reacting with "
+
 #: handlers.py:75
 msgid "Please wait..."
 msgstr "Please wait..."

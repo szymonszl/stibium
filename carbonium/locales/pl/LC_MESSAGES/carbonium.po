@@ -52,6 +52,22 @@ msgstr "PID: {pid}"
 msgid "Uptime: {uptime}"
 msgstr "Uptime: {uptime}"
 
+#: contrib/pins.py:86
+msgid "Please provide text or reply to a message to be pinned"
+msgstr "Proszę podać tekst albo odpowiedzieć na wiadomość do przypięcia"
+
+#: contrib/pins.py:90 contrib/pins.py:101
+msgid "Message was pinned!"
+msgstr "Wiadomość została przypięta!"
+
+#: contrib/pins.py:93
+msgid "Your pin is waiting for confirmation. "
+msgstr "Twoje przypięcie czeka na potwierdzenie. "
+
+#: contrib/pins.py:94
+msgid "Ask {n} people to confirm it by reacting with "
+msgstr "Poproś {n} osoby aby ją potwierdzić przez reakcję "
+
 #: handlers.py:75
 msgid "Please wait..."
 msgstr "Proszę czekać..."
