@@ -8,6 +8,7 @@ import os
 from .handlers import CommandHandler
 from .dataclasses import Message
 from . import __version__
+from ._i18n import _
 
 # Example of a very simple command
 class EchoCommand(CommandHandler):
@@ -24,7 +25,8 @@ class EchoCommand(CommandHandler):
     # since it provides useful preprocessing.
     # Instead create a method and pass it to super().__init__
     def _run(self, message: Message, bot_object):
-        text = f'"{message.args}" - {message.get_author_name()}'
+        text = _('"{quote}" - {author}')\
+            .format(quote=message.args, author=message.get_author_name())
         message.reply(text)
 
 # Example of a more sophisticated command
@@ -60,19 +62,19 @@ class InfoCommand(CommandHandler):
         if x == 'name':
             return bot.name
         if x == 'carbonium':
-            return f'running Carbonium v{__version__}'
+            return _('running Carbonium v{version}').format(version=__version__)
         if x == 'prefix':
-            return f'Prefix: {bot.prefix!r}'
+            return _('Prefix: {prefix}').format(prefix=repr(bot.prefix))
         if x == 'user':
             uid = bot.fbchat_client.uid
-            user_name = bot.get_user_name(uid)
-            return f'Logged in as {user_name} ({uid})'
+            username = bot.get_user_name(uid)
+            return _('Logged in as {username} ({uid})').format(username=username, uid=uid)
         if x == 'hostname':
-            return f'Server: {os.uname()[1]}'
+            return _('Server: {hostname}').format(hostname=os.uname()[1])
         if x == 'pid':
-            return f'PID: {os.getpid()}'
+            return _('PID: {pid}').format(pid=os.getpid())
         if x == 'uptime':
-            return 'Uptime: TODO' # TODO
+            return _('Uptime: {uptime}').format(uptime='TODO') # TODO uptime
 
     def _run(self, message: Message, bot_object):
         response = []

@@ -6,6 +6,7 @@ import traceback
 import json
 import threading
 import sched
+import gettext
 
 import fbchat
 from fbchat import models
@@ -13,6 +14,7 @@ from fbchat import models
 from ._logs import log
 from .dataclasses import Thread, Message, Reaction
 from .handlers import BaseHandler
+from ._i18n import _
 
 
 class Bot(object):
@@ -211,12 +213,10 @@ class Bot(object):
         except Exception:
             trace = traceback.format_exc()
             if thread is not None and notify:
-                short_error_message = '\n'.join([
-                    'An unexpected error occured, and the action could not be completed.',
-                    'The administrator has been notified.',
-                    'Error:',
-                    trace.splitlines()[-1],
-                ])
+                short_error_message = \
+                    _("An error occured and the action could not be completed.\n"
+                      "The administrator has been notified.\n") \
+                    + trace.splitlines()[-1],
                 self.send(short_error_message, thread) # notify the end user
             error_message = '\n'.join([
                 f'Error while running function {fun.__name__}',
@@ -232,6 +232,6 @@ class Bot(object):
         except KeyboardInterrupt as ex:
             if catch_keyboard:
                 if thread is not None and notify:
-                    self.send('The command has been interrupted by admin', thread)
+                    self.send(_('The command has been interrupted by admin'), thread)
                 return default
             raise ex

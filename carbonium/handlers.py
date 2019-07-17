@@ -2,6 +2,7 @@
 
 import re
 from .dataclasses import Message, Reaction
+from ._i18n import _
 
 #### Base handler
 
@@ -71,7 +72,7 @@ class CommandHandler(BaseHandler):
         args = match.group('args') or ''
         event_data.args = args
         if self.wait:
-            event_data.reply('Please wait...')
+            event_data.reply(_('Please wait...'))
         self.handlerfn(event_data, bot_object)
 
 class ReactionHandler(BaseHandler):
