@@ -24,6 +24,34 @@ msgstr ""
 msgid "The command has been interrupted by admin"
 msgstr "Polecenie zostało przerwane przez administratora"
 
+#: contrib/echo.py:19
+msgid "\"{quote}\" - {author}"
+msgstr "„{quote” — {author}"
+
+#: contrib/info.py:42
+msgid "running Carbonium v{version}"
+msgstr "oparte o Carbonium v{version}"
+
+#: contrib/info.py:44
+msgid "Prefix: {prefix}"
+msgstr "Prefiks: {prefix}"
+
+#: contrib/info.py:48
+msgid "Logged in as {username} ({uid})"
+msgstr "Zalogowano jako {username} ({uid})"
+
+#: contrib/info.py:50
+msgid "Server: {hostname}"
+msgstr "Serwer: {hostname}"
+
+#: contrib/info.py:52
+msgid "PID: {pid}"
+msgstr "PID: {pid}"
+
+#: contrib/info.py:54
+msgid "Uptime: {uptime}"
+msgstr "Uptime: {uptime}"
+
 #: handlers.py:75
 msgid "Please wait..."
 msgstr "Proszę czekać..."

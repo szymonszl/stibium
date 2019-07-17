@@ -24,6 +24,34 @@ msgstr ""
 msgid "The command has been interrupted by admin"
 msgstr "The command has been interrupted by admin"
 
+#: contrib/echo.py:19
+msgid "\"{quote}\" - {author}"
+msgstr "\"{quote}\" - {author}"
+
+#: contrib/info.py:42
+msgid "running Carbonium v{version}"
+msgstr "running Carbonium v{version}"
+
+#: contrib/info.py:44
+msgid "Prefix: {prefix}"
+msgstr "Prefix: {prefix}"
+
+#: contrib/info.py:48
+msgid "Logged in as {username} ({uid})"
+msgstr "Logged in as {username} ({uid})"
+
+#: contrib/info.py:50
+msgid "Server: {hostname}"
+msgstr "Server: {hostname}"
+
+#: contrib/info.py:52
+msgid "PID: {pid}"
+msgstr "PID: {pid}"
+
+#: contrib/info.py:54
+msgid "Uptime: {uptime}"
+msgstr "Uptime: {uptime}"
+
 #: handlers.py:75
 msgid "Please wait..."
 msgstr "Please wait..."
