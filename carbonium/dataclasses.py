@@ -29,6 +29,7 @@ class Message(object):
     thread = attr.ib()
     replied_to = attr.ib()
     timestamp = attr.ib()
+    reactions = attr.ib()
     raw = attr.ib()
     bot = attr.ib()
 
@@ -64,6 +65,7 @@ class Message(object):
             thread=thread,
             replied_to=cls.from_model(model.replied_to, thread, bot),
             timestamp=float(model.timestamp)/1000,
+            reactions=model.reactions,
             raw=raw,
             bot=bot,
         )
@@ -93,7 +95,6 @@ class Reaction(object):
             self._message = Message.from_mid(
                 self.mid, self.thread, self.bot
             )
-            print(self._message)
         return self._message
 
     @classmethod
