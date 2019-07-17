@@ -63,9 +63,17 @@ class Message(object):
             mid=model.uid,
             thread=thread,
             replied_to=cls.from_model(model.replied_to, thread, bot),
-            timestamp=model.timestamp/1000,
+            timestamp=float(model.timestamp)/1000,
             raw=raw,
             bot=bot,
+        )
+
+    @classmethod
+    def from_mid(cls, mid, thread, bot):
+        return cls.from_model(
+            bot.fbchat_client.fetchMessageInfo(mid, thread.id_),
+            thread,
+            bot
         )
 
 @attr.s
@@ -77,6 +85,16 @@ class Reaction(object):
     thread = attr.ib()
     raw = attr.ib()
     bot = attr.ib()
+    _message = None
+
+    @property
+    def message(self):
+        if self._message is None:
+            self._message = Message.from_mid(
+                self.mid, self.thread, self.bot
+            )
+            print(self._message)
+        return self._message
 
     @classmethod
     def fromkwargs(cls, kwargs, bot):
