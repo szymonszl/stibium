@@ -8,7 +8,6 @@ import os
 from .handlers import CommandHandler
 from .dataclasses import Message
 from . import __version__
-from ._i18n import _
 
 # Example of a very simple command
 class EchoCommand(CommandHandler):

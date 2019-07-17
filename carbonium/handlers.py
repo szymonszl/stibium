@@ -2,7 +2,6 @@
 
 import re
 from .dataclasses import Message, Reaction
-from ._i18n import _
 
 #### Base handler
 

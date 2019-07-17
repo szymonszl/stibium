@@ -14,7 +14,7 @@ from fbchat import models
 from ._logs import log
 from .dataclasses import Thread, Message, Reaction
 from .handlers import BaseHandler
-from ._i18n import _
+from ._i18n import _setuplocale
 
 
 class Bot(object):
@@ -30,8 +30,9 @@ class Bot(object):
     _username_cache = {}
     _scheduler = sched.scheduler(time.time, time.sleep)
 
-    def __init__(self, name, prefix, fb_login, owner):
+    def __init__(self, name, prefix, fb_login, owner, lang):
         log.debug('__init__ called')
+        _setuplocale(lang)
         self.name = name
         self.prefix = prefix
         self.fb_login = fb_login
