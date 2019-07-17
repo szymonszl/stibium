@@ -27,6 +27,8 @@ class Message(object):
     args = attr.ib(init=False)
     uid = attr.ib()
     thread = attr.ib()
+    replied_to = attr.ib()
+    timestamp = attr.ib()
     raw = attr.ib()
     bot = attr.ib()
 
@@ -40,12 +42,49 @@ class Message(object):
         """Get message author's name"""
         return self.bot.get_user_name(self.uid)
 
+    @classmethod
+    def fromkwargs(cls, kwargs, bot):
+        """Create a Message class from a handler's kwargs"""
+        return cls.from_model(
+            model=kwargs['message_object'],
+            thread=Thread.fromkwargs(kwargs),
+            bot=bot,
+            raw=kwargs
+        )
+
+    @classmethod
+    def from_model(cls, model, thread, bot, raw=None):
+        """Create a Message class from fbchat.models.Message"""
+        if model is None:
+            return None
+        return cls(
+            text=model.text,
+            uid=model.author,
+            mid=model.uid,
+            thread=thread,
+            replied_to=cls.from_model(model.replied_to, thread, bot),
+            timestamp=model.timestamp/1000,
+            raw=raw,
+            bot=bot,
+        )
+
 @attr.s
 class Reaction(object):
     """Class for reactions"""
-    mid = attr.ib()
+    mid = attr.ib() # TODO: add lazy evaluated message property
     reaction = attr.ib()
     uid = attr.ib()
     thread = attr.ib()
     raw = attr.ib()
     bot = attr.ib()
+
+    @classmethod
+    def fromkwargs(cls, kwargs, bot):
+        return cls(
+            mid=kwargs['mid'],
+            reaction=kwargs['reaction'],
+            uid=kwargs['author_id'],
+            thread=Thread.fromkwargs(kwargs),
+            raw=kwargs,
+            bot=bot,
+        )

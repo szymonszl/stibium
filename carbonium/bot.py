@@ -152,25 +152,11 @@ class Bot(object):
 
     def _fbchat_callback_handler(self, event, kwargs): # kwargs are passed straight as a dict, no **
         thread = Thread.fromkwargs(kwargs)
-        if event == 'onMessage': # TODO: modularize preprocessing
+        if event == 'onMessage': # TODO: move to dict?
             self.fbchat_client.markAsDelivered(thread.id_, kwargs['mid'])
-            processed = Message(
-                text=kwargs['message_object'].text,
-                uid=kwargs['author_id'],
-                mid=kwargs['mid'],
-                thread=thread,
-                raw=kwargs,
-                bot=self,
-            )
+            processed = Message.fromkwargs(kwargs, self)
         elif event == 'onReactionAdded':
-            processed = Reaction(
-                mid=kwargs['mid'],
-                reaction=kwargs['reaction'],
-                uid=kwargs['author_id'],
-                thread=thread,
-                raw=kwargs,
-                bot=self,
-            )
+            processed = Reaction.fromkwargs(kwargs, self)
         else:
             processed = kwargs
         for handler in self._handlers.get(event, []):
