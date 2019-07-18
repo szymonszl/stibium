@@ -6,3 +6,4 @@ examples of handlers.
 from .echo import EchoCommand
 from .info import InfoCommand
 from .pins import Pins
+from .whereami import WhereAmICommand
