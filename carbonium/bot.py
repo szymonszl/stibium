@@ -34,7 +34,7 @@ class Bot(object):
         self.name = name
         self.prefix = prefix
         self.fb_login = fb_login
-        self.owner = str(owner).strip()
+        self.owner = Thread.from_user_uid(owner)
         log.debug('Object created')
 
     def login(self):

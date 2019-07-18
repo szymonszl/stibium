@@ -19,6 +19,30 @@ class Thread(object):
             type_=kwargs.get('thread_type', ThreadType.USER),
         )
 
+    @classmethod
+    def from_user_uid(cls, uid):
+        """
+        Returns an USER Thread class, either from the argument
+        or created from the passed UID.
+        Can be passed either a ready Thread class or an UID.
+        """
+        if isinstance(uid, cls):
+            return uid
+        else:
+            return cls(id_=uid, type_=ThreadType.USER)
+
+    @classmethod
+    def from_group_uid(cls, uid):
+        """
+        Returns a GROUP Thread class, either from the argument
+        or created from the passed UID.
+        Can be passed either a ready Thread class or an UID.
+        """
+        if isinstance(uid, cls):
+            return uid
+        else:
+            return cls(id_=uid, type_=ThreadType.GROUP)
+
 @attr.s
 class Message(object):
     """Class for received messages"""
