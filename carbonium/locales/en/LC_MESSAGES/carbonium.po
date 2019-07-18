@@ -24,6 +24,34 @@ msgstr ""
 msgid "The command has been interrupted by admin"
 msgstr "The command has been interrupted by admin"
 
+#: contrib/forward.py:31 contrib/forward.py:46
+msgid "You can't use this command."
+msgstr "You can't use this command."
+
+#: contrib/forward.py:34 contrib/forward.py:49
+msgid "Please provide text to be sent."
+msgstr "Please provide text to be sent."
+
+#: contrib/forward.py:37 contrib/forward.py:55
+msgid ""
+"Message from {user}:\n"
+"{message}"
+msgstr ""
+"Message from {user}:\n"
+"{message}"
+
+#: contrib/forward.py:42 contrib/forward.py:60
+msgid "The message was forwarded."
+msgstr "The message was forwarded."
+
+#: contrib/forward.py:62
+msgid ""
+"Are you sure you want to send this to {user}?\n"
+"Please confirm by reacting {reaction}."
+msgstr ""
+"Are you sure you want to send this to {user}?\n"
+"Please confirm by reacting {reaction}."
+
 #: contrib/echo.py:19
 msgid "\"{quote}\" - {author}"
 msgstr "\"{quote}\" - {author}"

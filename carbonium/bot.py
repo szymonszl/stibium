@@ -174,7 +174,7 @@ class Bot(object):
                 log.error(errormsg)
                 self.send(
                     errormsg,
-                    thread=Thread(id_=self.owner)
+                    thread=self.owner
                 )
             elif valid:
                 log.debug('Executing %s, reacting to %s', handler, event)
@@ -226,7 +226,7 @@ class Bot(object):
                 trace,
             ])
             log.error(error_message)
-            self.send(error_message, Thread(id_=self.owner))
+            self.send(error_message, self.owner)
             return default
         except KeyboardInterrupt as ex:
             if catch_keyboard:

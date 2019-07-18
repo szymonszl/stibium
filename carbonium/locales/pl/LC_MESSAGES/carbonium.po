@@ -24,9 +24,37 @@ msgstr ""
 msgid "The command has been interrupted by admin"
 msgstr "Polecenie zostało przerwane przez administratora"
 
+#: contrib/forward.py:31 contrib/forward.py:46
+msgid "You can't use this command."
+msgstr "Nie możesz użyć tego polecenia."
+
+#: contrib/forward.py:34 contrib/forward.py:49
+msgid "Please provide text to be sent."
+msgstr "Proszę podać tekst do wysłania."
+
+#: contrib/forward.py:37 contrib/forward.py:55
+msgid ""
+"Message from {user}:\n"
+"{message}"
+msgstr ""
+"Wiadomość od {user}:\n"
+"{message}"
+
+#: contrib/forward.py:42 contrib/forward.py:60
+msgid "The message was forwarded."
+msgstr "Wiadomość została przekazana"
+
+#: contrib/forward.py:62
+msgid ""
+"Are you sure you want to send this to {user}?\n"
+"Please confirm by reacting {reaction}."
+msgstr ""
+"Jesteś pewien/pewna że chcesz to przesłać do {user}?\n"
+"Potwierdź, reagując {reaction}."
+
 #: contrib/echo.py:19
 msgid "\"{quote}\" - {author}"
-msgstr "„{quote” — {author}"
+msgstr "„{quote}” — {author}"
 
 #: contrib/info.py:42
 msgid "running Carbonium v{version}"
