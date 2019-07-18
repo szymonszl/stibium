@@ -6,7 +6,6 @@ import traceback
 import json
 import threading
 import sched
-import gettext
 
 import fbchat
 from fbchat import models

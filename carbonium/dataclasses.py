@@ -72,6 +72,7 @@ class Message(object):
 
     @classmethod
     def from_mid(cls, mid, thread, bot):
+        """Create a Message class from a message ID"""
         return cls.from_model(
             bot.fbchat_client.fetchMessageInfo(mid, thread.id_),
             thread,
@@ -81,7 +82,7 @@ class Message(object):
 @attr.s
 class Reaction(object):
     """Class for reactions"""
-    mid = attr.ib() # TODO: add lazy evaluated message property
+    mid = attr.ib()
     reaction = attr.ib()
     uid = attr.ib()
     thread = attr.ib()
@@ -99,6 +100,7 @@ class Reaction(object):
 
     @classmethod
     def fromkwargs(cls, kwargs, bot):
+        """Create a Reaction class from a handler's kwargs"""
         return cls(
             mid=kwargs['mid'],
             reaction=kwargs['reaction'],

@@ -8,7 +8,7 @@ from ..handlers import CommandHandler, ReactionHandler
 from ..dataclasses import Message, Reaction, MessageReaction
 from .._i18n import _
 
-class Pins():
+class Pins(object):
     """
     This class provides a system for pinning messages.
 
@@ -34,9 +34,9 @@ class Pins():
         self._pin_cmd = pin_cmd
         self._list_cmd = list_cmd
         self._confirms = confirms
-        self._load(init=True)
+        self._load()
 
-    def _load(self, init=False):
+    def _load(self):
         with open(self._db_file) as fd:
             self._db = json.load(fd)
 
@@ -51,10 +51,10 @@ class Pins():
         self._save()
 
     def _format_pin(self, pin):
-        ts = datetime.datetime\
+        timestamp = datetime.datetime\
             .fromtimestamp(pin[0]).strftime('%Y-%m-%d')
         out = '\n'.join([
-            f'{pin[1]}, {ts}',
+            f'{pin[1]}, {timestamp}',
             f'===',
             f'{pin[2]}',
         ])
@@ -96,7 +96,9 @@ class Pins():
                 )
             def _callback(event_data: Reaction, bot_object):
                 reactions = event_data.message.reactions
-                if len([k for k, v in reactions.items() if v == MessageReaction.YES]) == self._confirms:
+                if len( # count YES reactions
+                        [k for k, v in reactions.items() if v == MessageReaction.YES]
+                    ) == self._confirms:
                     self.add_pin(author, text, timestamp)
                     message.reply(_('Message was pinned!'))
             bot_object.register(ReactionHandler(_callback, mid, timeout=120))
