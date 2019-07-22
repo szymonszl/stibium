@@ -2,4 +2,10 @@
     "login": "Login to the account the bot will be running on",
     "password": "Password to the account",
     "owner": "User ID to your account (as string!)"
+    /* You can find your own uid by starting basic_usage.py
+     * with the above value empty, and running the %where
+     * command in the conversation with your bot's account.
+     * The bot will respond with a Thread object, from which
+     * you can copy out the 'id_' value and set it here.
+     */
 }

@@ -24,7 +24,12 @@ bot = carbonium.Bot(
 bot.register(carbonium.contrib.EchoCommand())
 # It will use the default 'echo' name, and will be called as '%echo'
 
+# Register another provided command
+bot.register(carbonium.contrib.WhereAmICommand(command='where'))
+# This command will be called as '%where', according to the setting.
+
 # Create a custom command without subclassing
+@carbonium.handlers.CommandHandler.register(bot, 'coinflip')
 def my_command(
         message: carbonium.dataclasses.Message,
         bot_object: carbonium.Bot
@@ -32,22 +37,19 @@ def my_command(
     result = random.choice(['Heads!', 'Tails!'])
     message.reply(result)
 
-bot.register(carbonium.handlers.CommandHandler(my_command, 'coinflip'))
-
 # Test out the exception handler
+@carbonium.handlers.CommandHandler.register(bot, 'oops')
 def bad_command(message, bot_object):
     raise Exception("It's your fault.")
 
-bot.register(carbonium.handlers.CommandHandler(bad_command, 'oops'))
-
 # Register new handlers during runtime
+@carbonium.handlers.CommandHandler.register(bot, 'selfdestruct')
 def selfdestruct_command(
         message: carbonium.dataclasses.Message,
         bot_object
     ):
     mid = message.reply('This message will self-destruct in 15 seconds.')
     bot.register(carbonium.handlers.SelfDestructMessage(mid, 15))
-bot.register(carbonium.handlers.CommandHandler(selfdestruct_command, 'selfdestruct'))
 
 
 # Start the login routine.
