@@ -48,6 +48,15 @@ class CommandHandler(BaseHandler):
         self.timeout = timeout
         self.wait = wait
 
+    @classmethod
+    def register(cls, bot, command, timeout=None, wait=False):
+        """A decorator to create and register commands. Reaturns a CommandHandler."""
+        def register_decorator(fn):
+            cmd = cls(fn, command, timeout, wait)
+            bot.register(cmd)
+            return cmd
+        return register_decorator
+
     def __repr__(self):
         return f'<{type(self).__name__} for {repr(self.command)}>'
 
