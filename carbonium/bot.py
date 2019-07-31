@@ -100,6 +100,18 @@ class Bot(object):
             log.debug('Registering a handler for function %s', repr(handler))
             if handler.event is None:
                 raise Exception('Handler did not define event type')
+            if handler.event == '_recurrent':
+                self._scheduler.enterabs(
+                    self._run_untrusted(
+                        handler.next_time,
+                        args=(time.time(),),
+                        notify=False
+                    ),
+                    0,
+                    self._handle_recurrent,
+                    argument=(handler,)
+                )
+                return
             if handler.event not in self._handlers.keys():
                 self._handlers[handler.event] = []
                 if self._logged_in:
@@ -122,6 +134,25 @@ class Bot(object):
             notify=False
         )
         self._handlers[handler.event].remove(handler)
+
+    def _handle_recurrent(self, handler: BaseHandler):
+        log.debug('Executing recurring handler %s', handler)
+        self._run_untrusted(
+            handler.execute,
+            args=(None, self),
+            thread=None,
+            notify=False
+        )
+        self._scheduler.enterabs(
+            self._run_untrusted(
+                handler.next_time,
+                args=(time.time(),),
+                notify=False
+            ),
+            0,
+            self._handle_recurrent,
+            argument=(handler,)
+        )
 
     def send(self, text, thread, mentions=None, reply=None):
         """Send a message to a specified thread"""

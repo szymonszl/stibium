@@ -4,6 +4,11 @@ import re
 from .dataclasses import Message, Reaction
 from ._i18n import _
 
+# TODO: "deprecate" creating handlers directly from __init__
+#       (to ease subclassing, see `contrib/echo.py:15`)
+#       instead opt for @classmethods (preferably also
+#       creating one for decorating)
+
 #### Base handler
 
 class BaseHandler(object):
@@ -119,7 +124,7 @@ class TimeoutHandler(BaseHandler):
         super().__init__()
         self.handlerfn = fn
         self.timeout = timeout
-    def execute(self, event_data, bot_object):
+    def execute(self, event_data, bot_object): # TODO: remove this shitty hack
         pass
     def on_timeout(self, bot_object):
         if callable(self.handlerfn):
@@ -142,3 +147,27 @@ class SelfDestructMessage(TimeoutHandler):
 
     def _run(self, bot_object):
         bot_object.fbchat_client.unsend(mid=self.mid)
+
+class RecurrentHandler(BaseHandler):
+    """
+    A recurring event handler
+
+    This handler will execute the provided function
+    regulary on a specified schedule.
+
+    The schedule is defined by the `next_time` method,
+    which is called with the current time as
+    a unix timestamp (float) and should return
+    the unix timestamp of the next execution
+    """
+    event = '_recurrent'
+    def __init__(self, fn, next_time):
+        super().__init__()
+        self.handlerfn = fn
+        self.nextfn = next_time
+    def execute(self, event_data, bot_object):
+        if callable(self.handlerfn):
+            self.handlerfn(bot_object)
+    def next_time(self, now):
+        if callable(self.nextfn):
+            return self.nextfn(now)
