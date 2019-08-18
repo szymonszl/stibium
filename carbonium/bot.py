@@ -60,8 +60,6 @@ class Bot(object):
 
     def _hook_function(self, hookedfunction):
         log.debug('Hooking function %s', hookedfunction)
-        if hookedfunction == '_timeout':
-            return
         if hookedfunction in self._hooked_functions:
             return
         def hook(self_, **kwargs): # pylint: disable=unused-argument
@@ -112,6 +110,14 @@ class Bot(object):
                     argument=(handler,)
                 )
                 return
+            if handler.event == '_timeout':
+                self._scheduler.enter(
+                    handler.timeout,
+                    0,
+                    self._handle_timeout,
+                    argument=(handler,)
+                )
+                return
             if handler.event not in self._handlers.keys():
                 self._handlers[handler.event] = []
                 if self._logged_in:
@@ -122,24 +128,25 @@ class Bot(object):
                 self._scheduler.enter(
                     handler.timeout,
                     0,
-                    self._handle_timeout,
+                    self._handlers[handler.event].remove,
                     argument=(handler,)
                 )
+        if len(handlers) > 0:
+            return handlers[0] # for use as a decorator
 
     def _handle_timeout(self, handler: BaseHandler):
         self._run_untrusted(
-            handler.on_timeout,
-            args=(self,),
+            handler.execute,
+            args=(time.time(), self),
             thread=None,
             notify=False
         )
-        self._handlers[handler.event].remove(handler)
 
     def _handle_recurrent(self, handler: BaseHandler):
         log.debug('Executing recurring handler %s', handler)
         self._run_untrusted(
             handler.execute,
-            args=(None, self),
+            args=(time.time(), self),
             thread=None,
             notify=False
         )
