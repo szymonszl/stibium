@@ -29,8 +29,8 @@ class InfoCommand(CommandHandler):
     }
 
     def __init__(self, command='info', options=None):
-        super().__init__(self._run, command, timeout=None, wait=False)
-        if isinstance(options, dict):
+        super().__init__(handler=None, command=command)
+        if options is not None:
             for k, v in options.items():
                 if k in self.options:
                     self.options[k] = v
@@ -53,9 +53,9 @@ class InfoCommand(CommandHandler):
         if x == 'uptime':
             return _('Uptime: {uptime}').format(uptime='TODO') # TODO uptime
 
-    def _run(self, message: Message, bot_object):
+    def handlerfn(self, message: Message, bot):
         response = []
         for k, v in self.options.items():
             if v:
-                response.append(self._get_data(k, bot_object))
+                response.append(self._get_data(k, bot))
         message.reply('\n'.join(response))

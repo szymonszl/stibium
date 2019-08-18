@@ -1,5 +1,6 @@
 from ..handlers import CommandHandler
 from ..dataclasses import Message
+from .._i18n import _
 
 # Example of a very simple command
 class EchoCommand(CommandHandler):
@@ -10,12 +11,14 @@ class EchoCommand(CommandHandler):
     """
 
     def __init__(self, command='echo'):
-        super().__init__(self._run, command, timeout=None, wait=False)
+        super().__init__(handler=None, command=command)
 
-    # Try not to override the execute method of CommandHandler,
-    # since it provides useful preprocessing.
-    # Instead create a method and pass it to super().__init__
-    def _run(self, message: Message, bot_object):
+    # If you're subclassing a handler, try not to override
+    # execute, override handlerfn instead
+    # and pass None to __init__
+    # Also, pylint shows method-hidden for the following declaration,
+    # it is a false positive (https://github.com/PyCQA/pylint/issues/414)
+    def handlerfn(self, message: Message, bot):
         text = _('"{quote}" - {author}')\
             .format(quote=message.args, author=message.get_author_name())
         message.reply(text)

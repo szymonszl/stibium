@@ -8,3 +8,13 @@ from .info import InfoCommand
 from .pins import Pins
 from .whereami import WhereAmICommand
 from .forward import Forward
+from .selfdestruct import SelfDestructMessage
+
+__all__ = [
+    'EchoCommand',
+    'InfoCommand',
+    'Pins',
+    'WhereAmICommand',
+    'Forward',
+    'SelfDestructMessage',
+]

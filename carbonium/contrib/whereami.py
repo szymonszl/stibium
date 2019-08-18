@@ -11,7 +11,7 @@ class WhereAmICommand(CommandHandler):
     """
 
     def __init__(self, command='whereami'):
-        super().__init__(self._run, command, timeout=None, wait=False)
+        super().__init__(handler=None, command=command)
 
-    def _run(self, message: Message, bot_object):
+    def handlerfn(self, message: Message, bot):
         message.reply(repr(message.thread))

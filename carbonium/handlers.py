@@ -5,6 +5,9 @@ from functools import wraps
 from .dataclasses import Message, Reaction
 from ._i18n import _
 
+
+#pylint: disable=missing-docstring
+
 #### Base handler
 
 class BaseHandler(object):
@@ -12,12 +15,12 @@ class BaseHandler(object):
     event = None
     timeout = None
     handlerfn = None
-    def __init__(self, handler, timeout=None):
+    def __init__(self, handler=None, timeout=None):
         self.timeout = timeout
         # Note: self.handlerfn is supposed to be
         # defined in custom subclass-based commands,
         # "None" should be then passed to this __init__.
-        if self.handlerfn is None:
+        if handler is not None:
             self.handlerfn = handler
     def setup(self, bot):
         pass
@@ -165,25 +168,3 @@ class RecurrentHandler(BaseHandler):
         def wrapper(fun):
             return cls(handler=fun, nexthandler=nexthandler)
         return wrapper
-
-### Various other handlers
-class SelfDestructMessage(TimeoutHandler):
-    """
-    Self-destructing message handler
-
-
-    This handler will automatically remove ("unsend")
-    a message after a set timeout.
-    """
-    mid = None
-    def __init__(self, timeout):
-        super().__init__(self, handler=None, timeout=timeout)
-    def setup(self, bot):
-        if self.mid is None:
-            raise Exception(f'MID for {type(self).__name__} not provided')
-        if isinstance(self.mid, Message):
-            self.mid = self.mid.mid
-        else:
-            self.mid = str(self.mid)
-    def handlerfn(self, event, bot):
-        bot.fbchat_client.unsend(mid=self.mid)

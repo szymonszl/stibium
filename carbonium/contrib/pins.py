@@ -66,14 +66,14 @@ class Pins(object):
             pins.append(self._format_pin(pin))
         return '\n\n'.join(pins)
 
-    def _list_fn(self, message: Message, bot_object):
+    def _list_fn(self, message: Message, bot):
         if message.args.isnumeric():
             n = int(message.args)
         else:
             n = 1
         message.reply(self.get_page(n))
 
-    def _pin_fn(self, message: Message, bot_object):
+    def _pin_fn(self, message: Message, bot):
         if message.args:
             author = message.get_author_name()
             text = message.args
@@ -94,14 +94,14 @@ class Pins(object):
                 _('Ask {n} people to confirm it by reacting with ').format(n=self._confirms) +
                 MessageReaction.YES.value
                 )
-            def _callback(event_data: Reaction, bot_object):
-                reactions = event_data.message.reactions
+            def _callback(reaction: Reaction, bot):
+                reactions = reaction.message.reactions
                 if len( # count YES reactions
                         [k for k, v in reactions.items() if v == MessageReaction.YES]
                     ) == self._confirms:
                     self.add_pin(author, text, timestamp)
                     message.reply(_('Message was pinned!'))
-            bot_object.register(ReactionHandler(_callback, mid, timeout=120))
+            bot.register(ReactionHandler(_callback, mid, timeout=120))
 
     def handlers(self):
         """Returns a list of handlers that need to be registered"""

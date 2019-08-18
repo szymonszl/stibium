@@ -75,7 +75,7 @@ class Bot(object):
         log.debug('Started timeout daemon')
         while True:
             # the thread is a daemon, so this while does not need to be exited
-            self._scheduler.run()
+            self._scheduler.run(blocking=False)
             time.sleep(1) # wait for more events
 
     def listen(self):
@@ -131,7 +131,7 @@ class Bot(object):
                     self._handlers[handler.event].remove,
                     argument=(handler,)
                 )
-        if len(handlers) > 0:
+        if handlers:
             return handlers[0] # for use as a decorator
 
     def _handle_timeout(self, handler: BaseHandler):
