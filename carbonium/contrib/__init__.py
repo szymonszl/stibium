@@ -9,6 +9,7 @@ from .pins import Pins
 from .whereami import WhereAmICommand
 from .forward import Forward
 from .selfdestruct import SelfDestructMessage
+from .everyone import EveryoneCommand
 
 __all__ = [
     'EchoCommand',
@@ -17,4 +18,5 @@ __all__ = [
     'WhereAmICommand',
     'Forward',
     'SelfDestructMessage',
+    'EveryoneCommand',
 ]

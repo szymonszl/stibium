@@ -6,7 +6,7 @@ from fbchat.models import ThreadType, MessageReaction
 @attr.s
 class Thread(object):
     """Class for containing thread's type and id"""
-    id_ = attr.ib()
+    id_ = attr.ib(converter=str)
     type_ = attr.ib(default=ThreadType.USER)
     @classmethod
     def fromkwargs(cls, kwargs): # kwargs are passed as dict
@@ -15,7 +15,7 @@ class Thread(object):
         if id_ is None:
             return
         return cls(
-            id_=str(id_),
+            id_=id_,
             type_=kwargs.get('thread_type', ThreadType.USER),
         )
 
