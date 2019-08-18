@@ -5,6 +5,7 @@ import json
 import carbonium
 
 # Here the configuration is stored in a JSON file.
+# Create it by copying the login.json.example file and filling it in.
 with open('login.json') as fd:
     config = json.load(fd)
 
@@ -29,7 +30,8 @@ bot.register(carbonium.contrib.WhereAmICommand(command='where'))
 # This command will be called as '%where', according to the setting.
 
 # Create a custom command without subclassing
-@carbonium.handlers.CommandHandler.register(bot, 'coinflip')
+@bot.register
+@carbonium.handlers.CommandHandler.create('coinflip')
 def my_command(
         message: carbonium.dataclasses.Message,
         bot_object: carbonium.Bot
@@ -38,18 +40,20 @@ def my_command(
     message.reply(result)
 
 # Test out the exception handler
-@carbonium.handlers.CommandHandler.register(bot, 'oops')
+@bot.register
+@carbonium.handlers.CommandHandler.create('oops')
 def bad_command(message, bot_object):
-    raise Exception("It's your fault.")
+    raise Exception("This exception will be caught, and a traceback will be DMed to you.")
 
 # Register new handlers during runtime
-@carbonium.handlers.CommandHandler.register(bot, 'selfdestruct')
+@bot.register
+@carbonium.handlers.CommandHandler.create('selfdestruct')
 def selfdestruct_command(
         message: carbonium.dataclasses.Message,
         bot_object
     ):
     mid = message.reply('This message will self-destruct in 15 seconds.')
-    bot.register(carbonium.handlers.SelfDestructMessage(mid, 15))
+    bot.register(carbonium.contrib.SelfDestructMessage(mid, 15))
 
 
 # Start the login routine.
