@@ -2,19 +2,21 @@
 
 import types
 import json
-import time
-import datetime
 
 from ..handlers import CommandHandler
-from ..dataclasses import Message, Thread
+from ..dataclasses import Thread
 from .._i18n import _
 
 class Permissions(object):
     """
     This class provides a system for disabling access to commands.
 
-    -- TODO --
-
+    The user set as admin (can be passed an uid or a Thread) will
+    have access to a management command (manage_cmd, default 'manage')
+    and can add users to groups. Users added to such group, will not
+    have access to commands wrapped by the `block` method.
+    Groups and users are stored in json format, in a file
+    which path is in `db_file`.
     """
     _db = {}
     _admin = None
@@ -35,6 +37,13 @@ class Permissions(object):
             json.dump(self._db, fd)
 
     def block(self, group, handler=None, notify=True): #AAAA
+        """
+        Block members of `group` from using a command.
+        Can be used as a decorator, if handler=None.
+        If notify is True, user blocked from using a command
+        will receive a message telling them they can't use
+        the command.
+        """
         self._assert_group(group)
         if not notify:
             def wrapper(han):
@@ -68,6 +77,8 @@ class Permissions(object):
         else:
             return wrapper
 
+    #def allow(self, group, handler=None, notify=True): # TODO
+
     def _assert_group(self, group):
         if group not in self._db:
             self._db[group] = []
@@ -81,7 +92,8 @@ class Permissions(object):
         if len(args) != 3:
             message.reply(
                 # TRANSLATORS: "add", "remove", and "reply" are keywords, do not change them
-                _('Not enough arguments.\n{prefix}{cmd} [add|remove] <group> [reply|<uid>]')
+                _('Not enough arguments.\n{prefix}{cmd} [add|ban|remove|unban] <group> [reply|<uid>]')\
+                    .format(prefix=bot.prefix, cmd=self._manage_cmd)
             )
             return
         # Get the UID of the targeted person
@@ -90,16 +102,21 @@ class Permissions(object):
         else:
             uid = args[2]
         self._assert_group(args[1])
-        if args[0] == 'add':
+        if args[0] in ('add', 'ban'):
             self._db[args[1]].append(uid)
             message.reply(
                 _('Added {uid} to group {group!r}').format(uid=uid, group=args[1])
             )
-        elif args[0] == 'remove':
+        elif args[0] in ('remove', 'unban'):
             if uid in self._db[args[1]]:
                 self._db[args[1]].remove(uid)
+                message.reply(
+                   _('Removed {uid} from group {group!r}').format(uid=uid, group=args[1])
+                )
             else:
-                message.reply(_('User {uid} was not in group.'))
+                message.reply(_('User {uid} was not in group.').format(uid=uid))
+        else:
+            message.reply(_('Unknown subcommand'))
         self._save()
 
     def handler(self):

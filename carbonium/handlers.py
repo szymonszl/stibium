@@ -1,7 +1,6 @@
 """This module provides the classes for creating event handlers"""
 
 import re
-from functools import wraps
 from .dataclasses import Message, Reaction
 from ._i18n import _
 
