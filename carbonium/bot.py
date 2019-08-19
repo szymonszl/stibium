@@ -34,7 +34,10 @@ class Bot(object):
         self.name = name
         self.prefix = prefix
         self.fb_login = fb_login
-        self.owner = Thread.from_user_uid(owner)
+        if owner:
+            self.owner = Thread.from_user_uid(owner)
+        else:
+            log.warning('Owner not set, DM error reporting disabled!')
         log.debug('Object created')
 
     def login(self):
@@ -167,7 +170,7 @@ class Bot(object):
         if thread is None:
             raise Exception('Could not send message: `thread` is None')
         message = None
-        if isinstance(mentions, list):
+        if mentions is not None:
             message = models.Message.formatMentions(text, *mentions)
         if message is None:
             message = models.Message(text=text)
@@ -264,7 +267,8 @@ class Bot(object):
                 trace,
             ])
             log.error(error_message)
-            self.send(error_message, self.owner)
+            if self.owner:
+                self.send(error_message, self.owner)
             return default
         except KeyboardInterrupt as ex:
             if catch_keyboard:

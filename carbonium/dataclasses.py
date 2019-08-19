@@ -54,7 +54,7 @@ class Message(object):
     replied_to = attr.ib()
     timestamp = attr.ib()
     reactions = attr.ib()
-    raw = attr.ib()
+    raw = attr.ib(repr=False)
     bot = attr.ib()
 
     def reply(self, text, **kwargs):

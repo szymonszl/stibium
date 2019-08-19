@@ -80,6 +80,14 @@ msgstr "PID: {pid}"
 msgid "Uptime: {uptime}"
 msgstr "Uptime: {uptime}"
 
+#: contrib/info.py:67
+msgid "Owner not set!"
+msgstr "Nie ustawiono właściciela!"
+
+#: contrib/info.py:68
+msgid "Owner: {username} ({uid})"
+msgstr "Właściciel: {username} ({uid})"
+
 #: contrib/pins.py:86
 msgid "Please provide text or reply to a message to be pinned"
 msgstr "Proszę podać tekst albo odpowiedzieć na wiadomość do przypięcia"

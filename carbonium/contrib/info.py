@@ -1,4 +1,6 @@
-import os
+import os # os.uname, os.getpid
+import time # time.time
+import datetime # datetime.timedelta
 
 from ..handlers import CommandHandler
 from ..dataclasses import Message
@@ -26,7 +28,9 @@ class InfoCommand(CommandHandler):
         'hostname': False,
         'pid': False,
         'uptime': True,
+        'owner': True,
     }
+    starttime = None
 
     def __init__(self, command='info', options=None):
         super().__init__(handler=None, command=command)
@@ -34,6 +38,10 @@ class InfoCommand(CommandHandler):
             for k, v in options.items():
                 if k in self.options:
                     self.options[k] = v
+
+    def setup(self, bot):
+        super().setup(bot)
+        self.starttime = time.time()
 
     def _get_data(self, x, bot):
         if x == 'name':
@@ -51,7 +59,16 @@ class InfoCommand(CommandHandler):
         if x == 'pid':
             return _('PID: {pid}').format(pid=os.getpid())
         if x == 'uptime':
-            return _('Uptime: {uptime}').format(uptime='TODO') # TODO uptime
+            return _('Uptime: {uptime}').format(
+                uptime=datetime.timedelta(seconds=int(time.time()-self.starttime))
+            )
+        if x == 'owner':
+            if bot.owner is None:
+                return _('Owner not set!')
+            return _('Owner: {username} ({uid})').format(
+                uid=bot.owner.id_,
+                username=bot.get_user_name(bot.owner.id_)
+            )
 
     def handlerfn(self, message: Message, bot):
         response = []
