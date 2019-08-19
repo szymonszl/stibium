@@ -10,6 +10,7 @@ from .whereami import WhereAmICommand
 from .forward import Forward
 from .selfdestruct import SelfDestructMessage
 from .everyone import EveryoneCommand
+from .permissions import Permissions
 
 __all__ = [
     'EchoCommand',
@@ -19,4 +20,5 @@ __all__ = [
     'Forward',
     'SelfDestructMessage',
     'EveryoneCommand',
+    'Permissions',
 ]
