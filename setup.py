@@ -1,11 +1,11 @@
 import setuptools
-from carbonium import __version__, __author__
+from carbonium_fb import __version__, __author__
 
 with open("README.rst", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="carbonium",
+    name="carbonium_fb",
     version=__version__,
     author=__author__,
     author_email="szymszl@firemail.cc",

@@ -2,7 +2,7 @@
 import random
 import json
 
-import carbonium
+import carbonium_fb
 
 # Here the configuration is stored in a JSON file.
 # Create it by copying the login.json.example file and filling it in.
