@@ -1,4 +1,4 @@
-"""This module provides the data classes for Carbonium"""
+"""This module provides the data classes for Stibium"""
 
 import attr
 from fbchat.models import ThreadType, MessageReaction

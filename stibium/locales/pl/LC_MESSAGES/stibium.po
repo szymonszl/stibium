@@ -2,10 +2,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Carbonium\n"
+"Project-Id-Version: Stibium\n"
 "POT-Creation-Date: 2019-08-20 00:11+0200\n"
 "Last-Translator: szymonszl\n"
-"Language: English\n"
+"Language: Polish\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -16,61 +16,61 @@ msgid ""
 "An error occured and the action could not be completed.\n"
 "The administrator has been notified.\n"
 msgstr ""
-"An error occured and the action could not be completed.\n"
-"The administrator has been notified.\n"
+"Wystąpił błąd.\n"
+"Administrator został już powiadomiony\n"
 
 #: bot.py:276
 msgid "The command has been interrupted by admin"
-msgstr "The command has been interrupted by admin"
+msgstr "Polecenie zostało przerwane przez administratora"
 
 #: contrib/echo.py:22
 msgid "\"{quote}\" - {author}"
-msgstr "\"{quote}\" - {author}"
+msgstr "„{quote}” — {author}"
 
 #: contrib/forward.py:31 contrib/forward.py:46 contrib/permissions.py:66
 #: contrib/permissions.py:89
 msgid "You can't use this command."
-msgstr "You can't use this command."
+msgstr "Nie możesz użyć tego polecenia."
 
 #: contrib/forward.py:34 contrib/forward.py:49
 msgid "Please provide text to be sent."
-msgstr "Please provide text to be sent."
+msgstr "Proszę podać tekst do wysłania."
 
 #: contrib/forward.py:37 contrib/forward.py:55
 msgid ""
 "Message from {user}:\n"
 "{message}"
 msgstr ""
-"Message from {user}:\n"
+"Wiadomość od {user}:\n"
 "{message}"
 
 #: contrib/forward.py:42 contrib/forward.py:60
 msgid "The message was forwarded."
-msgstr "The message was forwarded."
+msgstr "Wiadomość została przekazana"
 
 #: contrib/forward.py:62
 msgid ""
 "Are you sure you want to send this to {user}?\n"
 "Please confirm by reacting {reaction}."
 msgstr ""
-"Are you sure you want to send this to {user}?\n"
-"Please confirm by reacting {reaction}."
+"Jesteś pewien/pewna że chcesz to przesłać do {user}?\n"
+"Potwierdź, reagując {reaction}."
 
 #: contrib/info.py:50
-msgid "running Carbonium v{version}"
-msgstr "running Carbonium v{version}"
+msgid "running Stibium v{version}"
+msgstr "oparte o Stibium v{version}"
 
 #: contrib/info.py:52
 msgid "Prefix: {prefix}"
-msgstr "Prefix: {prefix}"
+msgstr "Prefiks: {prefix}"
 
 #: contrib/info.py:56
 msgid "Logged in as {username} ({uid})"
-msgstr "Logged in as {username} ({uid})"
+msgstr "Zalogowano jako {username} ({uid})"
 
 #: contrib/info.py:58
 msgid "Server: {hostname}"
-msgstr "Server: {hostname}"
+msgstr "Serwer: {hostname}"
 
 #: contrib/info.py:60
 msgid "PID: {pid}"
@@ -82,52 +82,52 @@ msgstr "Uptime: {uptime}"
 
 #: contrib/info.py:67
 msgid "Owner not set!"
-msgstr "Owner not set!"
+msgstr "Nie ustawiono właściciela!"
 
 #: contrib/info.py:68
 msgid "Owner: {username} ({uid})"
-msgstr "Owner: {username} ({uid})"
+msgstr "Właściciel: {username} ({uid})"
 
 #: contrib/permissions.py:95
 msgid ""
 "Not enough arguments.\n"
 "{prefix}{cmd} [add|ban|remove|unban] <group> [reply|<uid>]"
 msgstr ""
-"Not enough arguments.\n"
+"Zbyt mało argumentów.\n"
 "{prefix}{cmd} [add|ban|remove|unban] <group> [reply|<uid>]"
 
 #: contrib/permissions.py:108
 msgid "Added {uid} to group {group!r}"
-msgstr "Added {uid} to group {group!r}"
+msgstr "Dodano {uid} do grupy {group!r}"
 
 #: contrib/permissions.py:114
 msgid "Removed {uid} from group {group!r}"
-msgstr "Removed {uid} from group {group!r}"
+msgstr "Usunięto {uid} z grupy {group!r}"
 
 #: contrib/permissions.py:117
 msgid "User {uid} was not in group."
-msgstr "User {uid} was not in group."
+msgstr "Użytkownik {uid} nie był w grupie."
 
 #: contrib/permissions.py:119
 msgid "Unknown subcommand"
-msgstr "Unknown subcommand"
+msgstr "Nieznane subpolecenie"
 
 #: contrib/pins.py:86
 msgid "Please provide text or reply to a message to be pinned"
-msgstr "Please provide text or reply to a message to be pinned"
+msgstr "Proszę podać tekst albo odpowiedzieć na wiadomość do przypięcia"
 
 #: contrib/pins.py:90 contrib/pins.py:103
 msgid "Message was pinned!"
-msgstr "Message was pinned!"
+msgstr "Wiadomość została przypięta!"
 
 #: contrib/pins.py:93
 msgid "Your pin is waiting for confirmation. "
-msgstr "Your pin is waiting for confirmation. "
+msgstr "Twoje przypięcie czeka na potwierdzenie. "
 
 #: contrib/pins.py:94
 msgid "Ask {n} people to confirm it by reacting with "
-msgstr "Ask {n} people to confirm it by reacting with "
+msgstr "Poproś {n} osoby aby ją potwierdzić przez reakcję "
 
 #: handlers.py:86
 msgid "Please wait..."
-msgstr "Please wait..."
+msgstr "Proszę czekać..."

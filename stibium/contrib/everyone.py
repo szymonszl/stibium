@@ -12,7 +12,6 @@ class EveryoneCommand(CommandHandler):
     present in the group. It can be used to demand attention
     from the whole group, for example for important announcements.
     Take note not to overuse it, as it can be annoying.
-    TODO: create a permissions system, which could be paired with this command
     """
     group = None
     uids = []
