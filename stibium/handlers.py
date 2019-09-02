@@ -4,7 +4,6 @@ import re
 from .dataclasses import Message, Reaction
 from ._i18n import _
 
-
 #pylint: disable=missing-docstring
 
 #### Base handler

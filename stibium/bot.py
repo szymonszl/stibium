@@ -17,7 +17,7 @@ from ._i18n import _
 
 
 class Bot(object):
-    """Main Carbonium Bot class"""
+    """Main Stibium Bot class"""
     name = None
     owner = None
     fb_login = ()
