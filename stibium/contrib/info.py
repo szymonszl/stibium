@@ -18,11 +18,11 @@ class InfoCommand(CommandHandler):
     but this can be changed with the `command` kwarg.
     Sent information can be customized by the `options` kwarg.
     Available options:
-    name carbonium prefix user hostname pid uptime
+    name stibium prefix user hostname pid uptime
     """
     options = {
         'name': True,
-        'carbonium': True,
+        'stibium': True,
         'prefix': True,
         'user': True,
         'hostname': False,
@@ -46,8 +46,8 @@ class InfoCommand(CommandHandler):
     def _get_data(self, x, bot):
         if x == 'name':
             return bot.name
-        if x == 'carbonium':
-            return _('running Carbonium v{version}').format(version=__version__)
+        if x == 'stibium':
+            return _('running Stibium v{version}').format(version=__version__)
         if x == 'prefix':
             return _('Prefix: {prefix}').format(prefix=repr(bot.prefix))
         if x == 'user':
