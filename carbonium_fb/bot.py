@@ -13,6 +13,7 @@ from fbchat import models
 from ._logs import log
 from .dataclasses import Thread, Message, Reaction
 from .handlers import BaseHandler
+from ._i18n import _
 
 
 class Bot(object):
@@ -33,7 +34,10 @@ class Bot(object):
         self.name = name
         self.prefix = prefix
         self.fb_login = fb_login
-        self.owner = str(owner).strip()
+        if owner:
+            self.owner = Thread.from_user_uid(owner)
+        else:
+            log.warning('Owner not set, DM error reporting disabled!')
         log.debug('Object created')
 
     def login(self):
@@ -74,7 +78,7 @@ class Bot(object):
         log.debug('Started timeout daemon')
         while True:
             # the thread is a daemon, so this while does not need to be exited
-            self._scheduler.run()
+            self._scheduler.run(blocking=False)
             time.sleep(1) # wait for more events
 
     def listen(self):
@@ -91,24 +95,74 @@ class Bot(object):
         log.info('Starting listening...')
         self.fbchat_client.listen()
 
-    def register(self, handler: BaseHandler):
-        """Register a handler"""
-        log.debug('Registering a handler for function %s', repr(handler))
-        if handler.event is None:
-            raise Exception('Handler did not define event type')
-        if handler.event not in self._handlers.keys():
-            self._handlers[handler.event] = []
-            if self._logged_in:
-                self._hook_function(handler.event)
-        handler.setup(self)
-        self._handlers[handler.event].append(handler)
-        if handler.timeout is not None:
-            self._scheduler.enter(
-                handler.timeout,
-                0,
-                self._handlers[handler.event].remove,
-                argument=(handler,)
-            )
+    def register(self, *handlers: BaseHandler):
+        """Register handlers"""
+        for handler in handlers:
+            log.debug('Registering a handler for function %s', repr(handler))
+            if handler.event is None:
+                raise Exception('Handler did not define event type')
+            if handler.event == '_recurrent':
+                self._scheduler.enterabs(
+                    self._run_untrusted(
+                        handler.next_time,
+                        args=(time.time(),),
+                        notify=False
+                    ),
+                    0,
+                    self._handle_recurrent,
+                    argument=(handler,)
+                )
+                return
+            if handler.event == '_timeout':
+                self._scheduler.enter(
+                    handler.timeout,
+                    0,
+                    self._handle_timeout,
+                    argument=(handler,)
+                )
+                return
+            if handler.event not in self._handlers.keys():
+                self._handlers[handler.event] = []
+                if self._logged_in:
+                    self._hook_function(handler.event)
+            handler.setup(self)
+            self._handlers[handler.event].append(handler)
+            if handler.timeout is not None:
+                self._scheduler.enter(
+                    handler.timeout,
+                    0,
+                    self._handlers[handler.event].remove,
+                    argument=(handler,)
+                )
+        if handlers:
+            return handlers[0] # for use as a decorator
+
+    def _handle_timeout(self, handler: BaseHandler):
+        self._run_untrusted(
+            handler.execute,
+            args=(time.time(), self),
+            thread=None,
+            notify=False
+        )
+
+    def _handle_recurrent(self, handler: BaseHandler):
+        log.debug('Executing recurring handler %s', handler)
+        self._run_untrusted(
+            handler.execute,
+            args=(time.time(), self),
+            thread=None,
+            notify=False
+        )
+        self._scheduler.enterabs(
+            self._run_untrusted(
+                handler.next_time,
+                args=(time.time(),),
+                notify=False
+            ),
+            0,
+            self._handle_recurrent,
+            argument=(handler,)
+        )
 
     def send(self, text, thread, mentions=None, reply=None):
         """Send a message to a specified thread"""
@@ -116,7 +170,7 @@ class Bot(object):
         if thread is None:
             raise Exception('Could not send message: `thread` is None')
         message = None
-        if isinstance(mentions, list):
+        if mentions is not None:
             message = models.Message.formatMentions(text, *mentions)
         if message is None:
             message = models.Message(text=text)
@@ -140,25 +194,11 @@ class Bot(object):
 
     def _fbchat_callback_handler(self, event, kwargs): # kwargs are passed straight as a dict, no **
         thread = Thread.fromkwargs(kwargs)
-        if event == 'onMessage': # TODO: modularize preprocessing
+        if event == 'onMessage': # TODO: move to dict?
             self.fbchat_client.markAsDelivered(thread.id_, kwargs['mid'])
-            processed = Message(
-                text=kwargs['message_object'].text,
-                uid=kwargs['author_id'],
-                mid=kwargs['mid'],
-                thread=thread,
-                raw=kwargs,
-                bot=self,
-            )
+            processed = Message.fromkwargs(kwargs, self)
         elif event == 'onReactionAdded':
-            processed = Reaction(
-                mid=kwargs['mid'],
-                reaction=kwargs['reaction'],
-                uid=kwargs['author_id'],
-                thread=thread,
-                raw=kwargs,
-                bot=self,
-            )
+            processed = Reaction.fromkwargs(kwargs, self)
         else:
             processed = kwargs
         for handler in self._handlers.get(event, []):
@@ -175,7 +215,7 @@ class Bot(object):
                 log.error(errormsg)
                 self.send(
                     errormsg,
-                    thread=Thread(id_=self.owner)
+                    thread=self.owner
                 )
             elif valid:
                 log.debug('Executing %s, reacting to %s', handler, event)
@@ -213,12 +253,10 @@ class Bot(object):
         except Exception:
             trace = traceback.format_exc()
             if thread is not None and notify:
-                short_error_message = '\n'.join([
-                    'An unexpected error occured, and the action could not be completed.',
-                    'The administrator has been notified.',
-                    'Error:',
-                    trace.splitlines()[-1],
-                ])
+                short_error_message = \
+                    _("An error occured and the action could not be completed.\n"
+                      "The administrator has been notified.\n") \
+                    + trace.splitlines()[-1],
                 self.send(short_error_message, thread) # notify the end user
             error_message = '\n'.join([
                 f'Error while running function {fun.__name__}',
@@ -229,11 +267,12 @@ class Bot(object):
                 trace,
             ])
             log.error(error_message)
-            self.send(error_message, Thread(id_=self.owner))
+            if self.owner:
+                self.send(error_message, self.owner)
             return default
         except KeyboardInterrupt as ex:
             if catch_keyboard:
                 if thread is not None and notify:
-                    self.send('The command has been interrupted by admin', thread)
+                    self.send(_('The command has been interrupted by admin'), thread)
                 return default
             raise ex

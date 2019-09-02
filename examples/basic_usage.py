@@ -2,9 +2,10 @@
 import random
 import json
 
-import carbonium
+import carbonium_fb
 
 # Here the configuration is stored in a JSON file.
+# Create it by copying the login.json.example file and filling it in.
 with open('login.json') as fd:
     config = json.load(fd)
 
@@ -24,7 +25,13 @@ bot = carbonium.Bot(
 bot.register(carbonium.contrib.EchoCommand())
 # It will use the default 'echo' name, and will be called as '%echo'
 
+# Register another provided command
+bot.register(carbonium.contrib.WhereAmICommand(command='where'))
+# This command will be called as '%where', according to the setting.
+
 # Create a custom command without subclassing
+@bot.register
+@carbonium.handlers.CommandHandler.create('coinflip')
 def my_command(
         message: carbonium.dataclasses.Message,
         bot_object: carbonium.Bot
@@ -32,13 +39,22 @@ def my_command(
     result = random.choice(['Heads!', 'Tails!'])
     message.reply(result)
 
-bot.register(carbonium.handlers.CommandHandler(my_command, 'coinflip'))
-
 # Test out the exception handler
+@bot.register
+@carbonium.handlers.CommandHandler.create('oops')
 def bad_command(message, bot_object):
-    raise Exception("It's your fault.")
+    raise Exception("This exception will be caught, and a traceback will be DMed to you.")
 
-bot.register(carbonium.handlers.CommandHandler(bad_command, 'oops'))
+# Register new handlers during runtime
+@bot.register
+@carbonium.handlers.CommandHandler.create('selfdestruct')
+def selfdestruct_command(
+        message: carbonium.dataclasses.Message,
+        bot_object
+    ):
+    mid = message.reply('This message will self-destruct in 15 seconds.')
+    bot.register(carbonium.contrib.SelfDestructMessage(mid, 15))
+
 
 # Start the login routine.
 bot.login()
