@@ -1,17 +1,16 @@
 """This module provies the main Bot class"""
 
-import types
 import time
 import traceback
 import json
 import threading
 import sched
 
-import fbchat
 from fbchat import models
 
+from ._fbclient import Client
 from ._logs import log
-from .dataclasses import Thread, Message, Reaction
+from .dataclasses import Thread
 from .handlers import BaseHandler
 from ._i18n import _
 
@@ -48,31 +47,17 @@ class Bot(object):
                 cookies = json.load(fd)
         except OSError:
             cookies = {}
-        self.fbchat_client = fbchat.Client(
+        self.fbchat_client = Client(
             self.fb_login[0], self.fb_login[1], session_cookies=cookies, logging_level=30
         )
+        self.fbchat_client.stibium_callback = self._fbchat_callback_handler
+        self.fbchat_client.stibium_obj = self
         with open(self.fb_login[2], 'w') as fd:
             cookies = self.fbchat_client.getSession()
             json.dump(cookies, fd)
         log.debug('Created and logged in the fbchat client, now hooking callbacks...')
-        for event in self._handlers.keys():
-            self._hook_function(event)
         self._logged_in = True
         log.info('Logged in!')
-
-
-    def _hook_function(self, hookedfunction):
-        log.debug('Hooking function %s', hookedfunction)
-        if hookedfunction in self._hooked_functions:
-            return
-        def hook(self_, **kwargs): # pylint: disable=unused-argument
-            self._fbchat_callback_handler(hookedfunction, kwargs)
-            log.debug('Function %s called', hookedfunction)
-        setattr(
-            self.fbchat_client,
-            hookedfunction,
-            types.MethodType(hook, self.fbchat_client)
-        )
 
     def _timeout_daemon(self):
         log.debug('Started timeout daemon')
@@ -123,8 +108,6 @@ class Bot(object):
                 return
             if handler.event not in self._handlers.keys():
                 self._handlers[handler.event] = []
-                if self._logged_in:
-                    self._hook_function(handler.event)
             handler.setup(self)
             self._handlers[handler.event].append(handler)
             if handler.timeout is not None:
@@ -166,7 +149,7 @@ class Bot(object):
 
     def send(self, text, thread, mentions=None, reply=None):
         """Send a message to a specified thread"""
-        # TODO: more settings (in kwargs), like attachments
+        # TODO: add attachments, both here and in onMessage
         if thread is None:
             raise Exception('Could not send message: `thread` is None')
         message = None
@@ -192,19 +175,11 @@ class Bot(object):
             self._username_cache[uid] = name
         return name
 
-    def _fbchat_callback_handler(self, event, kwargs): # kwargs are passed straight as a dict, no **
-        thread = Thread.fromkwargs(kwargs)
-        if event == 'onMessage': # TODO: move to dict?
-            self.fbchat_client.markAsDelivered(thread.id_, kwargs['mid'])
-            processed = Message.fromkwargs(kwargs, self)
-        elif event == 'onReactionAdded':
-            processed = Reaction.fromkwargs(kwargs, self)
-        else:
-            processed = kwargs
-        for handler in self._handlers.get(event, []):
+    def _fbchat_callback_handler(self, func, thread, event):
+        for handler in self._handlers.get(func, []):
             valid = self._run_untrusted(
                 handler.check,
-                args=[processed, self],
+                args=[event, self],
                 default='error',
                 thread=thread,
                 notify=False
@@ -228,7 +203,7 @@ class Bot(object):
                 time.sleep(0.3) # for safety from bot detection
                 self._run_untrusted(
                     handler.execute,
-                    args=[processed, self],
+                    args=[event, self],
                     thread=thread,
                     catch_keyboard=True
                 )
