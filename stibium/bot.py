@@ -3,10 +3,10 @@
 import time
 import traceback
 import json
-import threading
-import sched
+import asyncio
+import pickle
 
-from fbchat import models
+import fbchat
 
 from ._fbclient import Client
 from ._logs import log
@@ -17,6 +17,7 @@ from ._i18n import _
 
 class Bot(object):
     """Main Stibium Bot class"""
+    loop = None
     name = None
     owner = None
     fb_login = ()
@@ -26,10 +27,10 @@ class Bot(object):
     _handlers = {}
     _hooked_functions = []
     _username_cache = {}
-    _scheduler = sched.scheduler(time.time, time.sleep)
 
-    def __init__(self, name, prefix, fb_login, owner):
+    def __init__(self, loop, name, prefix, fb_login, owner):
         log.debug('__init__ called')
+        self.loop = loop
         self.name = name
         self.prefix = prefix
         self.fb_login = fb_login
@@ -39,44 +40,31 @@ class Bot(object):
             log.warning('Owner not set, DM error reporting disabled!')
         log.debug('Object created')
 
-    def login(self):
+    async def login(self):
         """Log in to the bot account"""
         log.debug('login called')
         try:
-            with open(self.fb_login[2], 'r') as fd:
-                cookies = json.load(fd)
+            with open(self.fb_login[2], 'rb') as fd:
+                cookies = pickle.load(fd)
         except OSError:
             cookies = {}
-        self.fbchat_client = Client(
-            self.fb_login[0], self.fb_login[1], session_cookies=cookies, logging_level=30
+        self.fbchat_client = Client(loop=self.loop)
+        await self.fbchat_client.start(
+            self.fb_login[0], self.fb_login[1], session_cookies=cookies
         )
         self.fbchat_client.stibium_callback = self._fbchat_callback_handler
         self.fbchat_client.stibium_obj = self
-        with open(self.fb_login[2], 'w') as fd:
-            cookies = self.fbchat_client.getSession()
-            json.dump(cookies, fd)
+        with open(self.fb_login[2], 'wb') as fd:
+            cookies = self.fbchat_client.get_session()
+            pickle.dump(cookies, fd)
         log.debug('Created and logged in the fbchat client, now hooking callbacks...')
         self._logged_in = True
         log.info('Logged in!')
-
-    def _timeout_daemon(self):
-        log.debug('Started timeout daemon')
-        while True:
-            # the thread is a daemon, so this while does not need to be exited
-            self._scheduler.run(blocking=False)
-            time.sleep(1) # wait for more events
 
     def listen(self):
         """Start listening for events"""
         if not self._logged_in:
             raise Exception('The bot is not logged in yet')
-        log.debug('Starting the timeout daemon...')
-        timeout_daemon = threading.Thread(
-            target=self._timeout_daemon,
-            name='TimeoutThread',
-            daemon=True
-        )
-        timeout_daemon.start()
         log.info('Starting listening...')
         self.fbchat_client.listen()
 
@@ -87,97 +75,84 @@ class Bot(object):
             if handler.event is None:
                 raise Exception('Handler did not define event type')
             if handler.event == '_recurrent':
-                self._scheduler.enterabs(
-                    self._run_untrusted(
-                        handler.next_time,
-                        args=(time.time(),),
-                        notify=False
-                    ),
-                    0,
-                    self._handle_recurrent,
-                    argument=(handler,)
-                )
+                asyncio.create_task(self._handle_recurrent(handler))
                 return
             if handler.event == '_timeout':
-                self._scheduler.enter(
-                    handler.timeout,
-                    0,
-                    self._handle_timeout,
-                    argument=(handler,)
-                )
+                asyncio.create_task(self._handle_timeout_handler(handler))
                 return
             if handler.event not in self._handlers.keys():
                 self._handlers[handler.event] = []
-            handler.setup(self)
+            asyncio.create_task(handler.setup(self))
             self._handlers[handler.event].append(handler)
             if handler.timeout is not None:
-                self._scheduler.enter(
-                    handler.timeout,
-                    0,
-                    self._handlers[handler.event].remove,
-                    argument=(handler,)
-                )
+                asyncio.create_task(self._handle_timeout(handler))
         if handlers:
             return handlers[0] # for use as a decorator
 
-    def _handle_timeout(self, handler: BaseHandler):
-        self._run_untrusted(
+
+    async def _handle_timeout(self, handler: BaseHandler):
+        await asyncio.sleep(handler.timeout)
+        log.debug('Timing out handler %s', handler)
+        self._handlers[handler.event].remove(handler)
+
+    async def _handle_timeout_handler(self, handler: BaseHandler):
+        await asyncio.sleep(handler.timeout)
+        log.debug('Executing handler %s after timeout', handler)
+        await self._run_untrusted(
             handler.execute,
             args=(time.time(), self),
             thread=None,
             notify=False
         )
 
-    def _handle_recurrent(self, handler: BaseHandler):
-        log.debug('Executing recurring handler %s', handler)
-        self._run_untrusted(
-            handler.execute,
-            args=(time.time(), self),
-            thread=None,
-            notify=False
-        )
-        self._scheduler.enterabs(
-            self._run_untrusted(
+    async def _handle_recurrent(self, handler: BaseHandler):
+        while True:
+            delay = await self._run_untrusted(
                 handler.next_time,
                 args=(time.time(),),
                 notify=False
-            ),
-            0,
-            self._handle_recurrent,
-            argument=(handler,)
-        )
+            )
+            await asyncio.sleep(time.time() - delay)
+            log.debug('Executing recurring handler %s', handler)
+            await self._run_untrusted(
+                handler.execute,
+                args=(time.time(), self),
+                thread=None,
+                notify=False
+            )
 
-    def send(self, text, thread, mentions=None, reply=None):
+    async def send(self, text, thread, mentions=None, reply=None):
         """Send a message to a specified thread"""
         # TODO: add attachments, both here and in onMessage
         if thread is None:
             raise Exception('Could not send message: `thread` is None')
         message = None
         if mentions is not None:
-            message = models.Message.formatMentions(text, *mentions)
+            message = fbchat.Message.format_mentions(text, *mentions)
         if message is None:
-            message = models.Message(text=text)
+            message = fbchat.Message(text=text)
         if reply is not None:
             message.reply_to_id = reply
         log.info('Sending a message to thread %s', repr(thread))
-        return self.fbchat_client.send(
+        return await self.fbchat_client.send(
             message,
             thread_id=thread.id_,
             thread_type=thread.type_
         )
 
-    def get_user_name(self, uid):
+    async def get_user_name(self, uid):
         """Get the name of the user specified by uid"""
         uid = str(uid)
         name = self._username_cache.get(uid)
         if name is None:
-            name = self.fbchat_client.fetchUserInfo(uid)[uid].name
+            userinfo = await self.fbchat_client.fetch_user_info(uid)
+            name = userinfo[uid].name
             self._username_cache[uid] = name
         return name
 
-    def _fbchat_callback_handler(self, func, thread, event):
+    async def _fbchat_callback_handler(self, func, thread, event):
         for handler in self._handlers.get(func, []):
-            valid = self._run_untrusted(
+            valid = await self._run_untrusted(
                 handler.check,
                 args=[event, self],
                 default='error',
@@ -185,54 +160,60 @@ class Bot(object):
                 notify=False
             )
             if valid == 'error':
-                self._handlers.get(event, []).remove(handler)
+                self._handlers.get(func, []).remove(handler)
                 errormsg = f'The handler {handler} was disabled, because of causing an exception.'
                 log.error(errormsg)
-                self.send(
+                await self.send(
                     errormsg,
                     thread=self.owner
                 )
             elif valid:
                 log.debug('Executing %s, reacting to %s', handler, event)
-                self.fbchat_client.markAsRead(thread.id_)
-                self.fbchat_client.setTypingStatus(
-                    models.TypingStatus.TYPING,
+                await self.fbchat_client.mark_as_read(thread.id_)
+                await self.fbchat_client.set_typing_status(
+                    fbchat.TypingStatus.TYPING,
                     thread_type=thread.type_,
                     thread_id=thread.id_,
                 )
-                time.sleep(0.3) # for safety from bot detection
-                self._run_untrusted(
+                await asyncio.sleep(0.3) # for safety from bot detection
+                await self._run_untrusted(
                     handler.execute,
                     args=[event, self],
                     thread=thread,
                     catch_keyboard=True
                 )
-                self.fbchat_client.setTypingStatus(
-                    models.TypingStatus.STOPPED,
+                await self.fbchat_client.set_typing_status(
+                    fbchat.TypingStatus.STOPPED,
                     thread_type=thread.type_,
                     thread_id=thread.id_,
                 )
 
-    def _run_untrusted( # pylint: disable=dangerous-default-value
+    async def _run_untrusted(
             self,
             fun,
-            args=[],
-            kwargs={},
+            args=None,
+            kwargs=None,
             thread=None,
             notify=True,
             default=None,
             catch_keyboard=False
         ):
         try:
-            return fun(*args, **kwargs)
+            args = args or []
+            kwargs = kwargs or {}
+            return await asyncio.wait_for(fun(*args, **kwargs), timeout=30)
+        except asyncio.TimeoutError:
+            if thread is not None and notify:
+                await self.send(_('The command took to long to execute and was cancelled.'), thread)
+            return default
         except Exception:
             trace = traceback.format_exc()
             if thread is not None and notify:
                 short_error_message = \
                     _("An error occured and the action could not be completed.\n"
                       "The administrator has been notified.\n") \
-                    + trace.splitlines()[-1],
-                self.send(short_error_message, thread) # notify the end user
+                    + trace.splitlines()[-1]
+                await self.send(short_error_message, thread) # notify the end user
             error_message = '\n'.join([
                 f'Error while running function {fun.__name__}',
                 f'with *args={args}',
@@ -243,11 +224,11 @@ class Bot(object):
             ])
             log.error(error_message)
             if self.owner:
-                self.send(error_message, self.owner)
+                await self.send(error_message, self.owner)
             return default
-        except KeyboardInterrupt as ex:
+        except KeyboardInterrupt:
             if catch_keyboard:
                 if thread is not None and notify:
-                    self.send(_('The command has been interrupted by admin'), thread)
+                    await self.send(_('The command has been interrupted by admin'), thread)
                 return default
-            raise ex
+            raise

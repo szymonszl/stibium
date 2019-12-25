@@ -1,2 +1,2 @@
-fbchat
+fbchat-asyncio
 attrs

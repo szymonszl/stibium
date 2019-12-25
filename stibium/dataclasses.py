@@ -1,7 +1,6 @@
 """This module provides the data classes for Stibium"""
-
 import attr
-from fbchat.models import ThreadType, MessageReaction
+from fbchat import ThreadType, MessageReaction
 
 @attr.s
 class Thread(object):
@@ -9,7 +8,7 @@ class Thread(object):
     id_ = attr.ib(converter=str)
     type_ = attr.ib(default=ThreadType.USER)
     @classmethod
-    def fromkwargs(cls, kwargs): # kwargs are passed as dict
+    async def fromkwargs(cls, kwargs): # kwargs are passed as dict
         """Create a Thread class from a handler's kwargs"""
         id_ = kwargs.get('thread_id')
         if id_ is None:
@@ -53,33 +52,34 @@ class Message(object):
     thread = attr.ib()
     replied_to = attr.ib()
     timestamp = attr.ib()
+    created_at = attr.ib()
     reactions = attr.ib()
     raw = attr.ib(repr=False)
     bot = attr.ib()
 
-    def reply(self, text, **kwargs):
+    async def reply(self, text, **kwargs):
         """Send a message to a conversation that the message was received from"""
         if kwargs.get('reply', False): # if reply=True
             kwargs['reply'] = self.mid
-        return self.bot.send(text, self.thread, **kwargs)
+        return await self.bot.send(text, self.thread, **kwargs)
 
-    def get_author_name(self):
+    async def get_author_name(self):
         """Get message author's name"""
-        return self.bot.get_user_name(self.uid)
+        return await self.bot.get_user_name(self.uid)
 
     @classmethod
-    def fromkwargs(cls, kwargs, bot):
+    async def fromkwargs(cls, kwargs, bot):
         """Create a Message class from a handler's kwargs"""
-        return cls.from_model(
+        return await cls.from_model(
             model=kwargs['message_object'],
-            thread=Thread.fromkwargs(kwargs),
+            thread=await Thread.fromkwargs(kwargs),
             bot=bot,
             raw=kwargs
         )
 
     @classmethod
-    def from_model(cls, model, thread, bot, raw=None):
-        """Create a Message class from fbchat.models.Message"""
+    async def from_model(cls, model, thread, bot, raw=None):
+        """Create a Message class from fbchat.Message"""
         if model is None:
             return None
         return cls(
@@ -87,18 +87,20 @@ class Message(object):
             uid=model.author,
             mid=model.uid,
             thread=thread,
-            replied_to=cls.from_model(model.replied_to, thread, bot),
-            timestamp=float(model.timestamp)/1000,
+            replied_to=await cls.from_model(model.replied_to, thread, bot),
+            timestamp=model.created_at.timestamp(),
+            created_at=model.created_at,
             reactions=model.reactions,
             raw=raw,
             bot=bot,
         )
 
     @classmethod
-    def from_mid(cls, mid, thread, bot):
+    async def from_mid(cls, mid, thread, bot):
         """Create a Message class from a message ID"""
-        return cls.from_model(
-            bot.fbchat_client.fetchMessageInfo(mid, thread.id_),
+        model = await bot.fbchat_client.fetch_message_info(mid, thread.id_)
+        return await cls.from_model(
+            model,
             thread,
             bot
         )
@@ -110,26 +112,22 @@ class Reaction(object):
     reaction = attr.ib()
     uid = attr.ib()
     thread = attr.ib()
-    raw = attr.ib()
+    message = attr.ib()
+    raw = attr.ib(repr=False)
     bot = attr.ib()
-    _message = None
-
-    @property
-    def message(self):
-        if self._message is None:
-            self._message = Message.from_mid(
-                self.mid, self.thread, self.bot
-            )
-        return self._message
 
     @classmethod
-    def fromkwargs(cls, kwargs, bot):
+    async def fromkwargs(cls, kwargs, bot):
         """Create a Reaction class from a handler's kwargs"""
+        thread = await Thread.fromkwargs(kwargs)
+        mid = kwargs['mid']
+        message = await Message.from_mid(mid, thread, bot)
         return cls(
-            mid=kwargs['mid'],
+            mid=mid,
             reaction=kwargs['reaction'],
             uid=kwargs['author_id'],
-            thread=Thread.fromkwargs(kwargs),
+            thread=thread,
+            message=message,
             raw=kwargs,
             bot=bot,
         )
