@@ -109,9 +109,13 @@ class Bot(object):
         while True:
             delay = await self._run_untrusted(
                 handler.next_time,
+                isasync=False,
                 args=(time.time(),),
                 notify=False
             )
+            if not delay:
+                log.error('Recurrent handler %s has been disabled', handler)
+                return
             await asyncio.sleep(time.time() - delay)
             log.debug('Executing recurring handler %s', handler)
             await self._run_untrusted(
@@ -191,6 +195,7 @@ class Bot(object):
     async def _run_untrusted(
             self,
             fun,
+            isasync=True,
             args=None,
             kwargs=None,
             thread=None,
@@ -201,7 +206,10 @@ class Bot(object):
         try:
             args = args or []
             kwargs = kwargs or {}
-            return await asyncio.wait_for(fun(*args, **kwargs), timeout=30)
+            if isasync:
+                return await asyncio.wait_for(fun(*args, **kwargs), timeout=30)
+            else:
+                return fun(*args, **kwargs)
         except asyncio.TimeoutError:
             if thread is not None and notify:
                 await self.send(_('The command took to long to execute and was cancelled.'), thread)

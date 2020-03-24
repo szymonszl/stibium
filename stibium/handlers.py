@@ -155,7 +155,7 @@ class RecurrentHandler(BaseHandler):
         super().__init__(handler=handler, timeout=None)
         if nexthandler is not None:
             self.nextfn = nexthandler # supposed to be replaced when custom subclassing
-    async def next_time(self, now):
+    def next_time(self, now):
         if callable(self.nextfn):
             return await self.nextfn(now)
     @classmethod

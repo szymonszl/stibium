@@ -98,7 +98,7 @@ class Pins(object):
                 reactions = reaction.message.reactions
                 if len( # count YES reactions
                         [k for k, v in reactions.items() if v == MessageReaction.YES]
-                    ) == self._confirms:
+                    ) >= self._confirms: # sometimes it bugs out and skips a reaction
                     self.add_pin(author, text, timestamp)
                     message.reply(_('Message was pinned!'))
             bot.register(ReactionHandler(_callback, mid, timeout=120))
