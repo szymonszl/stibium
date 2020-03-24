@@ -18,7 +18,7 @@ class EchoCommand(CommandHandler):
     # and pass None to __init__
     # Also, pylint shows method-hidden for the following declaration,
     # it is a false positive (https://github.com/PyCQA/pylint/issues/414)
-    async def handlerfn(self, message: Message, bot):
+    def handlerfn(self, message: Message, bot):
         text = _('"{quote}" - {author}')\
-            .format(quote=message.args, author=await message.get_author_name())
-        await message.reply(text)
+            .format(quote=message.args, author=message.get_author_name())
+        message.reply(text)

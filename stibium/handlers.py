@@ -20,17 +20,17 @@ class BaseHandler(object):
         # "None" should be then passed to this __init__.
         if handler is not None:
             self.handlerfn = handler
-    async def setup(self, bot):
+    def setup(self, bot):
         pass
-    async def check(self, event, bot):
+    def check(self, event, bot):
         return False
-    async def execute(self, event, bot):
+    def execute(self, event, bot):
         if callable(self.handlerfn):
             # Note: handler functions should be called
             # with positional parameters, in order to
             # let 'event' be renamed to a more fitting name
             # (like Message for onMessage handlers)
-            await self.handlerfn(event, bot)
+            self.handlerfn(event, bot)
 
 #### Generic handlers
 
@@ -45,7 +45,7 @@ class CommandHandler(BaseHandler):
     !echo test (the prefix is "!", command is "echo", args is "test")
     %help (prefix is "%", command is "help, args is "")
     """
-    event = 'message'
+    event = 'onMessage'
     command = None
     prefix = None
     regex = None
@@ -57,7 +57,7 @@ class CommandHandler(BaseHandler):
         self.wait = wait
     def __repr__(self):
         return f'<{type(self).__name__} for {repr(self.command)}>'
-    async def setup(self, bot):
+    def setup(self, bot):
         self.prefix = bot.prefix
         # regex for: (assumng prefix=%)
         # %command [args] # or
@@ -69,21 +69,21 @@ class CommandHandler(BaseHandler):
             ),
             re.IGNORECASE
         )
-    async def check(self, event: Message, bot):
+    def check(self, event: Message, bot):
         if event.text is None:
             return False
         match = self.regex.match(event.text)
         if match is None:
             return False
         return True
-    async def execute(self, event: Message, bot):
+    def execute(self, event: Message, bot):
         match = self.regex.match(event.text)
         # parse out args for easier processing
         args = match.group('args') or ''
         event.args = args
         if self.wait:
-            await event.reply(_('Please wait...'))
-        await super().execute(event, bot)
+            event.reply(_('Please wait...'))
+        super().execute(event, bot)
     @classmethod
     def create(cls, command, timeout=None, wait=False):
         def wrapper(fun):
@@ -98,19 +98,19 @@ class ReactionHandler(BaseHandler):
     added to a specific message (which can be provided
     as a Message object or directly as a message id)
     """
-    event = 'reaction_added'
+    event = 'onReactionAdded'
     mid = None
     def __init__(self, handler, mid, timeout=None):
         super().__init__(handler=handler, timeout=timeout)
         self.mid = mid
     def __repr__(self):
         return f'<{type(self).__name__} mid={repr(self.mid)}>'
-    async def setup(self, bot):
+    def setup(self, bot):
         if isinstance(self.mid, Message):
             self.mid = self.mid.mid
         else:
             self.mid = str(self.mid)
-    async def check(self, event: Reaction, bot):
+    def check(self, event: Reaction, bot):
         if event.mid == self.mid:
             return True
         return False
@@ -132,6 +132,9 @@ class TimeoutHandler(BaseHandler):
         if timeout is None:
             raise Exception(f'Timeout for {type(self).__name__} not provided')
         super().__init__(handler=handler, timeout=timeout)
+    def execute(self, event, bot):
+        if callable(self.handlerfn):
+            self.handlerfn(event, bot)
     @classmethod
     def create(cls, timeout):
         def wrapper(fun):
@@ -157,7 +160,7 @@ class RecurrentHandler(BaseHandler):
             self.nextfn = nexthandler # supposed to be replaced when custom subclassing
     def next_time(self, now):
         if callable(self.nextfn):
-            return await self.nextfn(now)
+            return self.nextfn(now)
     @classmethod
     def create(cls, nexthandler):
         def wrapper(fun):

@@ -125,4 +125,4 @@ dmypy.json
 
 # Credential files in examples
 examples/login.json
-examples/cookies.pickle
+examples/cookies.json

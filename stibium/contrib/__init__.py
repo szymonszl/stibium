@@ -5,12 +5,12 @@ examples of handlers.
 """
 from .echo import EchoCommand
 from .info import InfoCommand
-#from .pins import Pins
+from .pins import Pins
 from .whereami import WhereAmICommand
-#from .forward import Forward
-#from .selfdestruct import SelfDestructMessage
-#from .everyone import EveryoneCommand
-#from .permissions import Permissions
+from .forward import Forward
+from .selfdestruct import SelfDestructMessage
+from .everyone import EveryoneCommand
+from .permissions import Permissions
 
 __all__ = [
     'EchoCommand',

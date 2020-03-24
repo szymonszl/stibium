@@ -39,7 +39,7 @@ class InfoCommand(CommandHandler):
                 if k in self.options:
                     self.options[k] = v
 
-    async def setup(self, bot):
+    def setup(self, bot):
         super().setup(bot)
         self.starttime = time.time()
 
@@ -70,9 +70,9 @@ class InfoCommand(CommandHandler):
                 username=bot.get_user_name(bot.owner.id_)
             )
 
-    async def handlerfn(self, message: Message, bot):
+    def handlerfn(self, message: Message, bot):
         response = []
         for k, v in self.options.items():
             if v:
                 response.append(self._get_data(k, bot))
-        await message.reply('\n'.join(response))
+        message.reply('\n'.join(response))

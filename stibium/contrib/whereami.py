@@ -13,5 +13,5 @@ class WhereAmICommand(CommandHandler):
     def __init__(self, command='whereami'):
         super().__init__(handler=None, command=command)
 
-    async def handlerfn(self, message: Message, bot):
-        await message.reply(repr(message.thread))
+    def handlerfn(self, message: Message, bot):
+        message.reply(repr(message.thread))
